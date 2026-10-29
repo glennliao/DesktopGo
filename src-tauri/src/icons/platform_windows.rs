@@ -493,7 +493,13 @@ pub(super) fn extract_icon_for_item(
 
 #[cfg(windows)]
 pub(super) fn launch_app_windows(path: &str) -> Result<(), String> {
-    use std::os::windows::process::CommandExt;
+    use windows::core::{w, PCWSTR};
+    use windows::Win32::UI::Shell::ShellExecuteW;
+    use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+
+    if path.contains('\0') {
+        return Err("Launch path contains a null character".into());
+    }
 
     if is_special_shell_path(path) {
         return launch_special_shell_path(path);
@@ -506,11 +512,24 @@ pub(super) fn launch_app_windows(path: &str) -> Result<(), String> {
         return Ok(());
     }
 
-    std::process::Command::new("cmd")
-        .args(["/C", "start", "", path])
-        .creation_flags(0x08000000)
-        .spawn()
-        .map_err(|e| format!("Failed to launch: {}", e))?;
+    let wide_path: Vec<u16> = path.encode_utf16().chain(std::iter::once(0)).collect();
+    // Pass a literal shell target; cmd.exe would interpret &, %, and other path characters.
+    let result = unsafe {
+        ShellExecuteW(
+            None,
+            w!("open"),
+            PCWSTR(wide_path.as_ptr()),
+            PCWSTR::null(),
+            PCWSTR::null(),
+            SW_SHOWNORMAL,
+        )
+    };
+    if (result.0 as isize) <= 32 {
+        return Err(format!(
+            "Failed to open shell target (code {})",
+            result.0 as isize
+        ));
+    }
     Ok(())
 }
 
@@ -519,6 +538,11 @@ mod tests {
     use std::path::Path;
 
     use super::{shortcut_icon_lookup_paths, shortcut_icon_resource_candidates};
+
+    #[test]
+    fn shell_launch_rejects_embedded_null_without_opening_a_target() {
+        assert!(super::launch_app_windows("invalid\0.exe").is_err());
+    }
 
     #[test]
     fn shortcut_icon_lookup_prefers_the_shortcut_before_its_target() {
