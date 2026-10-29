@@ -112,6 +112,9 @@ pub(crate) fn update_registration(
         .map_err(|_| "无法锁定当前启动台快捷键状态。".to_string())?;
 
     if current.as_deref() == Some(normalized.as_str()) {
+        if !app.global_shortcut().is_registered(normalized.as_str()) {
+            register_handler(app, &normalized)?;
+        }
         return Ok(normalized);
     }
 
@@ -131,13 +134,54 @@ pub(crate) fn update_registration(
     Ok(normalized)
 }
 
+/// Release our own hotkey while the settings field captures ordinary key events.
+/// The saved value is untouched; closing the settings window also restores it.
+pub(crate) fn set_recording(app: &tauri::AppHandle, recording: bool) -> Result<(), String> {
+    let state = app.state::<LaunchpadShortcutState>();
+    let current = state
+        .current
+        .lock()
+        .map_err(|_| "无法锁定当前启动台快捷键状态。".to_string())?;
+    let Some(shortcut) = current.as_deref() else {
+        return Ok(());
+    };
+    let registered = app.global_shortcut().is_registered(shortcut);
+    if recording && registered {
+        app.global_shortcut()
+            .unregister(shortcut)
+            .map_err(|error| format!("无法暂停启动台快捷键：{error}"))?;
+    } else if !recording && !registered {
+        register_handler(app, shortcut)?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn set_launchpad_shortcut_recording(
+    window: tauri::WebviewWindow,
+    recording: bool,
+) -> Result<(), String> {
+    if window.label() != "settings" {
+        return Err("仅设置窗口可以录制启动台快捷键。".to_string());
+    }
+    set_recording(window.app_handle(), recording)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn normalize_accepts_default_shortcut() {
-        assert!(normalize(DEFAULT_LAUNCHPAD_SHORTCUT).is_ok());
+    fn normalize_accepts_recorded_shortcuts() {
+        for shortcut in [
+            DEFAULT_LAUNCHPAD_SHORTCUT,
+            "Ctrl+Alt+KeyK",
+            "Ctrl+Shift+Equal",
+            "Alt+ArrowUp",
+            "Super+KeyP",
+        ] {
+            assert!(normalize(shortcut).is_ok(), "{shortcut}");
+        }
     }
 
     #[test]

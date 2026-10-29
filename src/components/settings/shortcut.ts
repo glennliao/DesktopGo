@@ -108,7 +108,8 @@ export function normalizeShortcutDraftText(shortcut: string) {
 }
 
 export function buildShortcutFromKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-  const hasModifier = event.ctrlKey || event.altKey || event.shiftKey
+  if (SHORTCUT_MODIFIER_CODES.has(event.code)) return { ignore: true }
+  const hasModifier = event.ctrlKey || event.altKey || event.shiftKey || event.metaKey
 
   if (!hasModifier) {
     return {
@@ -116,7 +117,7 @@ export function buildShortcutFromKeyDown(event: KeyboardEvent<HTMLInputElement>)
     }
   }
 
-  if (!event.code || event.code === 'Unidentified' || SHORTCUT_MODIFIER_CODES.has(event.code)) {
+  if (!event.code || event.code === 'Unidentified') {
     return {
       error: translate('请在按住修饰键后，再按一个主键，例如 Space、K 或 F1。'),
     }
@@ -126,6 +127,7 @@ export function buildShortcutFromKeyDown(event: KeyboardEvent<HTMLInputElement>)
   if (event.ctrlKey) tokens.push('Ctrl')
   if (event.altKey) tokens.push('Alt')
   if (event.shiftKey) tokens.push('Shift')
+  if (event.metaKey) tokens.push('Super')
   tokens.push(event.code)
 
   return {

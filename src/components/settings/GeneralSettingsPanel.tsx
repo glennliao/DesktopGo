@@ -1,12 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type KeyboardEvent,
-  type ReactNode,
-} from 'react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getCurrentWindow } from '@tauri-apps/api/window'
@@ -54,6 +46,7 @@ import {
 } from './shortcut'
 import { setSkipReturnToMainOnClose, trackWindowPersistentSync } from './windowPersistentSync'
 import { AppearanceSettingsCards } from './AppearanceSettingsCards'
+import { useShortcutRecording } from './useShortcutRecording'
 
 const ICON_SIZE_OPTIONS: { label: string; value: IconSize }[] = [
   { label: '大图标', value: 'large' },
@@ -122,7 +115,8 @@ export function GeneralSettingsPanel() {
   const [launchpadShortcutDraft, setLaunchpadShortcutDraft] = useState(
     formatShortcutForInput(DEFAULT_LAUNCHPAD_SHORTCUT)
   )
-  const [isRecordingShortcut, setIsRecordingShortcut] = useState(false)
+  const { isRecordingShortcut, recordingReady, startRecording, stopRecording } =
+    useShortcutRecording()
   const [isSavingShortcut, setIsSavingShortcut] = useState(false)
   const shortcutInputRef = useRef<HTMLInputElement | null>(null)
   const toast = useToast()
@@ -352,27 +346,8 @@ export function GeneralSettingsPanel() {
   }
 
   const handleToggleShortcutRecording = () => {
-    if (isRecordingShortcut) {
-      setIsRecordingShortcut(false)
-      return
-    }
-
-    setIsRecordingShortcut(true)
-    toast.info(translate('开始录制快捷键，请按下新的组合键。'), {
-      key: 'settings-shortcut',
-      title: translate('启动台快捷键'),
-    })
-    window.setTimeout(() => {
-      shortcutInputRef.current?.focus()
-    }, 0)
-  }
-
-  const handleShortcutInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (isRecordingShortcut) {
-      return
-    }
-
-    setLaunchpadShortcutDraft(event.target.value)
+    startRecording()
+    shortcutInputRef.current?.focus()
   }
 
   const handleShortcutInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -380,10 +355,12 @@ export function GeneralSettingsPanel() {
       return
     }
 
+    // Leave Tab available for keyboard navigation out of the recorder.
+    if (event.code === 'Tab' && !event.ctrlKey && !event.altKey && !event.metaKey) return
     event.preventDefault()
     event.stopPropagation()
 
-    if (event.repeat) {
+    if (event.repeat || !recordingReady || event.nativeEvent.isComposing) {
       return
     }
 
@@ -394,11 +371,12 @@ export function GeneralSettingsPanel() {
       !event.shiftKey &&
       !event.metaKey
     ) {
-      setIsRecordingShortcut(false)
+      void stopRecording()
       return
     }
 
     const result = buildShortcutFromKeyDown(event)
+    if (result.ignore) return
     if (!result.shortcut) {
       toast.error(result.error ?? translate('未能识别该快捷键。'), {
         key: 'settings-shortcut',
@@ -408,7 +386,7 @@ export function GeneralSettingsPanel() {
     }
 
     setLaunchpadShortcutDraft(result.shortcut)
-    setIsRecordingShortcut(false)
+    void stopRecording()
     toast.success(
       translate('已捕获 {shortcut}，点击“保存快捷键”后生效。', {
         shortcut: formatShortcutForDisplay(result.shortcut),
@@ -421,15 +399,11 @@ export function GeneralSettingsPanel() {
   }
 
   const handleShortcutInputBlur = () => {
-    if (!isRecordingShortcut) {
-      return
-    }
-
-    setIsRecordingShortcut(false)
+    void stopRecording()
   }
 
   const handleResetLaunchpadShortcut = () => {
-    setIsRecordingShortcut(false)
+    void stopRecording()
     setLaunchpadShortcutDraft(formatShortcutForInput(DEFAULT_LAUNCHPAD_SHORTCUT))
     toast.info(
       launchpadShortcut === DEFAULT_LAUNCHPAD_SHORTCUT
@@ -462,10 +436,10 @@ export function GeneralSettingsPanel() {
       return
     }
 
-    setIsRecordingShortcut(false)
     setIsSavingShortcut(true)
 
     try {
+      await stopRecording()
       const normalizedShortcut = await invoke<string>('update_launchpad_shortcut', {
         shortcut: draftShortcut,
       })
@@ -515,7 +489,7 @@ export function GeneralSettingsPanel() {
     normalizedDraftShortcut !== normalizeShortcutDraftText(currentShortcutInputValue)
   const shortcutDisplayValue = isRecordingShortcut
     ? translate('请按下新的组合键')
-    : launchpadShortcutDraft
+    : formatShortcutForInput(launchpadShortcutDraft)
   return (
     <div className="space-y-8">
       <section aria-labelledby="settings-appearance-heading">
@@ -694,10 +668,8 @@ export function GeneralSettingsPanel() {
           />
 
           <SettingCard
-            label={translate('打开启动台快捷键')}
-            desc={translate(
-              '修改唤起启动台的全局快捷键。录制支持 Ctrl、Alt、Shift；像 Ctrl+Space 这种可能被系统或输入法拦截的组合，可以直接手动输入。'
-            )}
+            label={translate('启动台快捷键')}
+            desc={translate('点击输入框并按下组合键，保存后用于显示或收起启动台。')}
           >
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span className="rounded-full border border-border/80 bg-background px-2.5 py-1">
@@ -724,11 +696,15 @@ export function GeneralSettingsPanel() {
                 ref={shortcutInputRef}
                 value={shortcutDisplayValue}
                 aria-label={translate('启动台快捷键')}
-                placeholder={translate('可手动输入，例如 Ctrl+Space')}
+                placeholder={translate('请按下新的组合键')}
+                readOnly
+                disabled={isSavingShortcut}
+                aria-busy={isRecordingShortcut && !recordingReady}
                 spellCheck={false}
                 autoCorrect="off"
                 autoCapitalize="off"
-                onChange={handleShortcutInputChange}
+                onFocus={startRecording}
+                onClick={startRecording}
                 onKeyDown={handleShortcutInputKeyDown}
                 onBlur={handleShortcutInputBlur}
                 className={cn(
@@ -740,11 +716,11 @@ export function GeneralSettingsPanel() {
               <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
-                  variant={isRecordingShortcut ? 'secondary' : 'outline'}
+                  variant="outline"
                   onClick={handleToggleShortcutRecording}
                   disabled={isSavingShortcut}
                 >
-                  {isRecordingShortcut ? translate('取消录制') : translate('录制快捷键')}
+                  {translate('录制快捷键')}
                 </Button>
                 <Button
                   type="button"
@@ -763,12 +739,6 @@ export function GeneralSettingsPanel() {
                 </Button>
               </div>
             </div>
-
-            <p className="text-xs leading-5 text-muted-foreground">
-              {translate(
-                '支持手动输入 `Ctrl+Space`、`Ctrl+Alt+K`、`Alt+Shift+P`。录制模式只识别 `Ctrl / Alt / Shift`。'
-              )}
-            </p>
           </SettingCard>
 
           <SettingCard

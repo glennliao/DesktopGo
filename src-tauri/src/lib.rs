@@ -233,6 +233,7 @@ fn app_command_handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         get_custom_icon_source,
         optimize_icon_image,
         update_launchpad_shortcut,
+        crate::launchpad_shortcut::set_launchpad_shortcut_recording,
         close_settings_window,
         sync_window_persistent_state,
         get_launch_on_startup_enabled,
@@ -278,6 +279,17 @@ pub fn run() {
     app.run(|app_handle, event| {
         if let RunEvent::Exit = event {
             everything::shutdown_search_runtime(app_handle);
+        } else if let RunEvent::WindowEvent {
+            label,
+            event: tauri::WindowEvent::Destroyed,
+            ..
+        } = event
+        {
+            if label == "settings" {
+                if let Err(error) = launchpad_shortcut::set_recording(app_handle, false) {
+                    log::warn!("Failed to restore shortcut after settings closed: {error}");
+                }
+            }
         }
     });
 }

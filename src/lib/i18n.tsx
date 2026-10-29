@@ -215,8 +215,8 @@ const EN_MESSAGES: Record<string, string> = {
   '每次打开启动台后，不自动激活搜索栏，只显示当前启动台界面。':
     'Each time Launchpad opens, the search box stays inactive and only the current Launchpad surface is shown.',
   '保存启动台默认焦点失败：{error}': 'Failed to save the default Launchpad focus target: {error}',
-  '修改唤起启动台的全局快捷键。录制支持 Ctrl、Alt、Shift；像 Ctrl+Space 这种可能被系统或输入法拦截的组合，可以直接手动输入。':
-    'Change the global shortcut used to open the launchpad. Recording supports Ctrl, Alt, and Shift. Shortcuts like Ctrl+Space that may be intercepted by the system or IME can be entered manually.',
+  '点击输入框并按下组合键，保存后用于显示或收起启动台。':
+    'Click the field and press a key combination, then save to use it to show or hide Launchpad.',
   '当前生效：{shortcut}': 'Current: {shortcut}',
   '待保存：{shortcut}': 'Pending: {shortcut}',
   录制中: 'Recording',
@@ -339,8 +339,6 @@ const EN_MESSAGES: Record<string, string> = {
   确认执行自定义应用全量对账: 'Confirm full custom app reconciliation',
   '该操作会扫描当前自定义应用目录（仅一级目录），补齐缺失项并清理快照中的失效记录，不会删除磁盘文件。':
     'This scans the current custom app directory (top-level folders only), adds missing items, and cleans invalid snapshot records without deleting disk files.',
-  '支持手动输入 `Ctrl+Space`、`Ctrl+Alt+K`、`Alt+Shift+P`。录制模式只识别 `Ctrl / Alt / Shift`。':
-    'Manual input supports `Ctrl+Space`, `Ctrl+Alt+K`, and `Alt+Shift+P`. Recording mode only recognizes `Ctrl / Alt / Shift`.',
   '读取系统开机自启状态失败，已回退到本地设置。':
     'Failed to read the system startup setting. Fell back to the local setting.',
   '加载设置失败：{error}': 'Failed to load settings: {error}',
@@ -349,8 +347,7 @@ const EN_MESSAGES: Record<string, string> = {
   '已关闭开机自启，Windows 登录后不会自动启动 DesktopGo。':
     'Launch on startup is disabled. DesktopGo will not start automatically after Windows sign-in.',
   '更新开机自启失败：{error}': 'Failed to update launch on startup: {error}',
-  '开始录制快捷键，请按下新的组合键。':
-    'Shortcut recording started. Press the new key combination.',
+  '快捷键录制失败：{error}': 'Failed to record shortcut: {error}',
   '未能识别该快捷键。': 'Could not recognize that shortcut.',
   '已捕获 {shortcut}，点击“保存快捷键”后生效。':
     'Captured {shortcut}. Click "Save shortcut" to apply it.',
