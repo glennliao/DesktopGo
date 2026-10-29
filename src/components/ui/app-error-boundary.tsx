@@ -34,7 +34,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
         <div className="max-w-md space-y-1.5">
           <h1 className="text-base font-semibold">{translate('界面暂时无法显示')}</h1>
           <p className="text-sm leading-6 text-muted-foreground">
-            {translate('重新加载 DesktopGo 后通常可以恢复，当前数据不会被修改。')}
+            {translate('重新加载 {appName} 后通常可以恢复，当前数据不会被修改。')}
           </p>
         </div>
         <Button type="button" onClick={() => window.location.reload()}>

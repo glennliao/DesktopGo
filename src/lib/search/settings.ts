@@ -1,4 +1,4 @@
-﻿import { invoke } from '@tauri-apps/api/core'
+import { invoke } from '@tauri-apps/api/core'
 import { getDefaultLauncherFolders } from './api'
 import {
   DEFAULT_BEST_MATCH_FOLDER_CONFIG,
@@ -368,21 +368,21 @@ export const describeSearchRuntimeError = (message: string) => {
     return translate('Everything 正在启动或建立索引，搜索结果可能暂不完整，请稍后重试。')
   }
   if (message.startsWith('EverythingNotFound')) {
-    return translate('未找到已安装的 Everything。请通过 DesktopGo 安装程序完成安装。')
+    return translate('未找到已安装的 Everything。请通过 {appName} 安装程序完成安装。')
   }
   if (message.startsWith('EverythingSdkUnavailable')) {
-    return translate('DesktopGo 的 Everything 组件不可用。请重新安装 DesktopGo。')
+    return translate('{appName} 的 Everything 组件不可用。请重新安装 {appName}。')
   }
   if (message.startsWith('EverythingIpcUnavailable')) {
     return translate(
-      'DesktopGo 无法连接正在运行的 Everything。请确认 Everything 已启动，并且两个应用使用相同的权限级别。'
+      '{appName} 无法连接正在运行的 Everything。请确认 Everything 已启动，并且两个应用使用相同的权限级别。'
     )
   }
   if (message.startsWith('EverythingBusy')) {
-    return translate('DesktopGo 正在等待上一个 Everything IPC 请求完成。')
+    return translate('{appName} 正在等待上一个 Everything IPC 请求完成。')
   }
   if (message === 'Everything runtime startup timed out.') {
-    return translate('DesktopGo 在准备 Everything 时超时，请重试搜索。')
+    return translate('{appName} 在准备 Everything 时超时，请重试搜索。')
   }
   return message
 }

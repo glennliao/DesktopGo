@@ -6,6 +6,7 @@ import { EN_APPEARANCE_MESSAGES } from './i18n/appearanceMessages'
 import { EN_AI_MESSAGES } from './i18n/aiMessages'
 import { EN_LAYOUT_LIBRARY_MESSAGES } from './i18n/layoutMessages'
 import { EN_QUICK_IMPORT_MESSAGES } from './i18n/quickImportMessages'
+import { appIdentity } from './appIdentity'
 
 export { useI18n } from './i18n/context'
 export { getCurrentLanguage, getIntlLocale } from './i18n/language'
@@ -142,10 +143,10 @@ const EN_MESSAGES: Record<string, string> = {
   '当前已关闭，Dock 中的图标会回到图标网格。':
     'Dock is off and its icons will return to the icon grid.',
   开机自启: 'Launch on startup',
-  '当前已开启，登录 Windows 后会自动启动 DesktopGo 并保持后台待命。':
-    'DesktopGo will start automatically after Windows sign-in and stay ready in the background.',
-  '当前已关闭，登录 Windows 后需要手动启动 DesktopGo。':
-    'DesktopGo will not start automatically after Windows sign-in.',
+  '当前已开启，登录 Windows 后会自动启动 {appName} 并保持后台待命。':
+    '{appName} will start automatically after Windows sign-in and stay ready in the background.',
+  '当前已关闭，登录 Windows 后需要手动启动 {appName}。':
+    '{appName} will not start automatically after Windows sign-in.',
   主题模式: 'Theme',
   图标大小: 'Icon size',
   窗口大小: 'Window size',
@@ -342,10 +343,10 @@ const EN_MESSAGES: Record<string, string> = {
   '读取系统开机自启状态失败，已回退到本地设置。':
     'Failed to read the system startup setting. Fell back to the local setting.',
   '加载设置失败：{error}': 'Failed to load settings: {error}',
-  '已开启开机自启，Windows 登录后会自动启动 DesktopGo。':
-    'Launch on startup is enabled. DesktopGo will start automatically after Windows sign-in.',
-  '已关闭开机自启，Windows 登录后不会自动启动 DesktopGo。':
-    'Launch on startup is disabled. DesktopGo will not start automatically after Windows sign-in.',
+  '已开启开机自启，Windows 登录后会自动启动 {appName}。':
+    'Launch on startup is enabled. {appName} will start automatically after Windows sign-in.',
+  '已关闭开机自启，Windows 登录后不会自动启动 {appName}。':
+    'Launch on startup is disabled. {appName} will not start automatically after Windows sign-in.',
   '更新开机自启失败：{error}': 'Failed to update launch on startup: {error}',
   '快捷键录制失败：{error}': 'Failed to record shortcut: {error}',
   '未能识别该快捷键。': 'Could not recognize that shortcut.',
@@ -388,8 +389,8 @@ const EN_MESSAGES: Record<string, string> = {
   '更新页读取 GitHub Releases 的 updater 清单，下载与安装过程可见。':
     'The update page reads the updater manifest from GitHub Releases, with visible download and install progress.',
   '桌面启动、搜索与整理工具': 'Desktop launching, search, and organization tool',
-  'DesktopGo 把桌面启动、文件搜索、图标整理和应用更新收进一个统一入口里。关于页现在直接暴露版本、运行时和项目入口，方便你确认当前构建、提交反馈，或跳转查看发布记录。':
-    'DesktopGo brings desktop launching, file search, icon organization, and app updates into one entry point. The About page now exposes the version, runtime, and project links directly so you can verify the current build, send feedback, or jump to release notes.',
+  '{appName} 把桌面启动、文件搜索、图标整理和应用更新收进一个统一入口里。关于页现在直接暴露版本、运行时和项目入口，方便你确认当前构建、提交反馈，或跳转查看发布记录。':
+    '{appName} brings desktop launching, file search, icon organization, and app updates into one entry point. The About page now exposes the version, runtime, and project links directly so you can verify the current build, send feedback, or jump to release notes.',
   本地优先: 'Local-first',
   '没有账号系统；主要设置、布局和搜索配置都保存在本地环境。':
     'There is no account system. Core settings, layout, and search configuration stay on the local machine.',
@@ -491,8 +492,8 @@ const EN_MESSAGES: Record<string, string> = {
   关闭文件夹: 'Close folder',
   '滚动 Dock': 'Scroll Dock',
   界面暂时无法显示: 'The interface could not be displayed',
-  '重新加载 DesktopGo 后通常可以恢复，当前数据不会被修改。':
-    'Reloading DesktopGo usually resolves this issue. Your current data will not be changed.',
+  '重新加载 {appName} 后通常可以恢复，当前数据不会被修改。':
+    'Reloading {appName} usually resolves this issue. Your current data will not be changed.',
   重新加载: 'Reload',
   '图标库加载失败，请重试。': 'Could not load the icon library. Please try again.',
   '现有布局不会被修改。': 'Your existing layout will not be changed.',
@@ -909,9 +910,9 @@ const EN_MESSAGES: Record<string, string> = {
     'Adjust icon artwork opacity without changing labels or click targets.',
   启动行为: 'Startup behavior',
   '控制窗口驻留和登录 Windows 后的启动方式。':
-    'Control window persistence and how DesktopGo starts with Windows.',
+    'Control window persistence and how {appName} starts with Windows.',
   快捷键与焦点: 'Shortcut and focus',
-  '设置唤起方式和主窗口打开后的默认位置。': 'Configure how DesktopGo opens and where focus starts.',
+  '设置唤起方式和主窗口打开后的默认位置。': 'Configure how {appName} opens and where focus starts.',
   '部分项目未能导入，未完成的项目已保留，请检查后重试。':
     'Some items could not be imported. They remain in the list so you can check them and try again.',
   '导入失败，项目已保留。请检查文件是否可访问后重试。':
@@ -993,5 +994,5 @@ export function translate(
   language: AppLanguage = getCurrentLanguage()
 ) {
   const translated = MESSAGES[language][message] ?? message
-  return formatMessage(translated, params)
+  return formatMessage(translated, { appName: appIdentity.name, ...params })
 }

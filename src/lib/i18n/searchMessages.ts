@@ -1,14 +1,14 @@
 export const EN_SEARCH_MESSAGES: Record<string, string> = {
-  '未找到已安装的 Everything。请通过 DesktopGo 安装程序完成安装。':
-    'Installed Everything was not found. Please install it through the DesktopGo installer.',
-  'DesktopGo 的 Everything 组件不可用。请重新安装 DesktopGo。':
-    'DesktopGo Everything components are unavailable. Please reinstall DesktopGo.',
-  'DesktopGo 无法连接正在运行的 Everything。请确认 Everything 已启动，并且两个应用使用相同的权限级别。':
-    'DesktopGo cannot connect to the running Everything instance. Make sure Everything is running and both apps use the same privilege level.',
-  'DesktopGo 正在等待上一个 Everything IPC 请求完成。':
-    'DesktopGo is waiting for the previous Everything IPC request to finish.',
-  'DesktopGo 在准备 Everything 时超时，请重试搜索。':
-    'DesktopGo timed out while preparing Everything. Please try the search again.',
+  '未找到已安装的 Everything。请通过 {appName} 安装程序完成安装。':
+    'Installed Everything was not found. Please install it through the {appName} installer.',
+  '{appName} 的 Everything 组件不可用。请重新安装 {appName}。':
+    '{appName} Everything components are unavailable. Please reinstall {appName}.',
+  '{appName} 无法连接正在运行的 Everything。请确认 Everything 已启动，并且两个应用使用相同的权限级别。':
+    '{appName} cannot connect to the running Everything instance. Make sure Everything is running and both apps use the same privilege level.',
+  '{appName} 正在等待上一个 Everything IPC 请求完成。':
+    '{appName} is waiting for the previous Everything IPC request to finish.',
+  '{appName} 在准备 Everything 时超时，请重试搜索。':
+    '{appName} timed out while preparing Everything. Please try the search again.',
   '加载搜索设置失败：{error}': 'Failed to load search settings: {error}',
   搜索设置: 'Search settings',
   '搜索设置已保存。': 'Search settings saved.',
@@ -71,10 +71,10 @@ export const EN_SEARCH_MESSAGES: Record<string, string> = {
   '自动检测并连接已安装的 Everything 运行时。':
     'Automatically detect and connect to an installed Everything runtime.',
   '仅支持已安装的 Everything': 'Installed Everything only',
-  'DesktopGo 的文件搜索目前仅支持已安装的 Everything 应用。':
-    'DesktopGo file search currently supports installed Everything only.',
-  '如果搜索不可用，请重新安装 DesktopGo，并勾选 Everything 安装选项。':
-    'If search is unavailable, reinstall DesktopGo and enable the Everything install option.',
+  '{appName} 的文件搜索目前仅支持已安装的 Everything 应用。':
+    '{appName} file search currently supports installed Everything only.',
+  '如果搜索不可用，请重新安装 {appName}，并勾选 Everything 安装选项。':
+    'If search is unavailable, reinstall {appName} and enable the Everything install option.',
   未知大小: 'Unknown size',
   最佳匹配目录: 'Best match folders',
   管理图标库: 'Manage icon library',

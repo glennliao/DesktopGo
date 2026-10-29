@@ -327,8 +327,8 @@ export function GeneralSettingsPanel() {
       setLaunchOnStartupEnabled(nextEnabled)
       toast.success(
         nextEnabled
-          ? translate('已开启开机自启，Windows 登录后会自动启动 DesktopGo。')
-          : translate('已关闭开机自启，Windows 登录后不会自动启动 DesktopGo。'),
+          ? translate('已开启开机自启，Windows 登录后会自动启动 {appName}。')
+          : translate('已关闭开机自启，Windows 登录后不会自动启动 {appName}。'),
         {
           key: 'settings-launch-on-startup',
           title: translate('开机自启'),
@@ -659,8 +659,8 @@ export function GeneralSettingsPanel() {
             title={translate('开机自启')}
             description={
               launchOnStartupEnabled
-                ? translate('当前已开启，登录 Windows 后会自动启动 DesktopGo 并保持后台待命。')
-                : translate('当前已关闭，登录 Windows 后需要手动启动 DesktopGo。')
+                ? translate('当前已开启，登录 Windows 后会自动启动 {appName} 并保持后台待命。')
+                : translate('当前已关闭，登录 Windows 后需要手动启动 {appName}。')
             }
             checked={launchOnStartupEnabled}
             onChange={handleLaunchOnStartup}

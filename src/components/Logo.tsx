@@ -1,3 +1,5 @@
+import { appIdentity } from '@/lib/appIdentity'
+
 interface LogoIconProps {
   size?: number
   className?: string
@@ -30,12 +32,21 @@ const textSizes = {
 
 /** DesktopGo 品牌文字 */
 export function LogoText({ size = 'md', className }: LogoTextProps) {
+  const name = appIdentity.name
+  if (!name.startsWith('DesktopGo')) {
+    return <span className={`${textSizes[size]} font-semibold ${className ?? ''}`}>{name}</span>
+  }
   return (
-    <span className={`inline-flex items-baseline ${className ?? ''}`}>
+    <span className={`inline-flex items-baseline whitespace-nowrap ${className ?? ''}`}>
       <span className={`${textSizes[size]} font-light text-muted-foreground/70 tracking-wide`}>
         Desktop
       </span>
       <span className={`${textSizes[size]} font-bold text-[#a78bfa] tracking-wide`}>Go</span>
+      {name.slice('DesktopGo'.length).trim() ? (
+        <span className={`${textSizes[size]} ml-1 font-medium text-foreground`}>
+          {name.slice('DesktopGo'.length).trim()}
+        </span>
+      ) : null}
     </span>
   )
 }

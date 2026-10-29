@@ -35,16 +35,15 @@ enum AppLanguage {
     En,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 struct TrayMenuText {
     status_visible: &'static str,
     status_hidden: &'static str,
     show_launchpad: &'static str,
     hide_launchpad: &'static str,
     open_settings: &'static str,
-    quit: &'static str,
-    tooltip: &'static str,
-    settings_window_title: &'static str,
+    quit: String,
+    settings_window_title: String,
 }
 
 #[derive(Deserialize)]
@@ -69,7 +68,7 @@ impl AppLanguage {
         }
     }
 
-    fn tray_menu_text(self) -> TrayMenuText {
+    fn tray_menu_text(self, app_name: &str) -> TrayMenuText {
         match self {
             Self::En => TrayMenuText {
                 status_visible: "Launchpad: visible",
@@ -77,9 +76,8 @@ impl AppLanguage {
                 show_launchpad: "Show Launchpad",
                 hide_launchpad: "Hide Launchpad",
                 open_settings: "Open Settings",
-                quit: "Quit DesktopGo",
-                tooltip: "DesktopGo",
-                settings_window_title: "Settings",
+                quit: format!("Quit {app_name}"),
+                settings_window_title: format!("{app_name} — Settings"),
             },
             Self::Zh => TrayMenuText {
                 status_visible: "启动台当前: 已显示",
@@ -87,9 +85,8 @@ impl AppLanguage {
                 show_launchpad: "显示启动台",
                 hide_launchpad: "隐藏启动台",
                 open_settings: "打开设置",
-                quit: "退出 DesktopGo",
-                tooltip: "DesktopGo",
-                settings_window_title: "设置",
+                quit: format!("退出 {app_name}"),
+                settings_window_title: format!("{app_name} — 设置"),
             },
         }
     }
@@ -144,7 +141,7 @@ pub(crate) fn install(app: &mut tauri::App) -> tauri::Result<()> {
 
     let _tray = TrayIconBuilder::with_id(TRAY_ICON_ID)
         .icon(crate::tray_icon::build(scale_factor))
-        .tooltip(tray_state.language().tray_menu_text().tooltip)
+        .tooltip(&app.package_info().name)
         .menu(&menu)
         .on_menu_event(|app, event| match event.id.as_ref() {
             TRAY_TOGGLE_MENU_ITEM_ID => window::toggle_main_window_visibility(app),
@@ -194,7 +191,7 @@ pub(crate) fn install(app: &mut tauri::App) -> tauri::Result<()> {
 
 fn build_tray_menu(app: &tauri::AppHandle) -> tauri::Result<(Menu<tauri::Wry>, TrayMenuItems)> {
     let language = app.state::<TrayState>().language();
-    let menu_text = language.tray_menu_text();
+    let menu_text = language.tray_menu_text(&app.package_info().name);
     let launchpad_visible = main_window_is_visible(app);
 
     let status_item = MenuItem::with_id(
@@ -331,7 +328,9 @@ fn try_refresh_tray_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
     let Some(menu_items) = tray_state.menu_items() else {
         return Ok(());
     };
-    let menu_text = tray_state.language().tray_menu_text();
+    let menu_text = tray_state
+        .language()
+        .tray_menu_text(&app.package_info().name);
     let launchpad_visible = main_window_is_visible(app);
 
     menu_items.status_item.set_text(if launchpad_visible {
@@ -347,7 +346,7 @@ fn try_refresh_tray_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
     menu_items.settings_item.set_text(menu_text.open_settings)?;
     menu_items.quit_item.set_text(menu_text.quit)?;
     if let Some(tray) = app.tray_by_id(TRAY_ICON_ID) {
-        tray.set_tooltip(Some(menu_text.tooltip))?;
+        tray.set_tooltip(Some(&app.package_info().name))?;
     }
     Ok(())
 }
@@ -358,15 +357,15 @@ pub(crate) fn refresh_tray_menu(app: &tauri::AppHandle) {
     }
 }
 
-pub(crate) fn settings_window_title(app: &tauri::AppHandle) -> &'static str {
+pub(crate) fn settings_window_title(app: &tauri::AppHandle) -> String {
     app.state::<TrayState>()
         .language()
-        .tray_menu_text()
+        .tray_menu_text(&app.package_info().name)
         .settings_window_title
 }
 
 pub(crate) fn refresh_settings_window_title(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("settings") {
-        let _ = window.set_title(settings_window_title(app));
+        let _ = window.set_title(&settings_window_title(app));
     }
 }

@@ -72,7 +72,8 @@ pub(crate) use window_style::{
 
 fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     log::info!(
-        "DesktopGo v{} starting (pid {})",
+        "{} v{} starting (pid {})",
+        app.package_info().name,
         app.package_info().version,
         std::process::id()
     );

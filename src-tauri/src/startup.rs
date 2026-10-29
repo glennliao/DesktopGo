@@ -179,7 +179,7 @@ pub(crate) fn set_launch_on_startup_enabled(
     _app: &tauri::AppHandle,
     _enabled: bool,
 ) -> Result<bool, String> {
-    Err("调试构建不支持开机自启，请使用安装版或发布版 DesktopGo。".to_string())
+    Err("调试构建不支持开机自启，请使用安装版或发布版。".to_string())
 }
 
 #[cfg(any(not(windows), all(windows, not(debug_assertions))))]

@@ -392,7 +392,7 @@ pub(crate) fn create_main_window(app: &tauri::AppHandle) {
         .expect("public/logo.ico must contain a valid window icon frame");
     let builder =
         tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("index.html".into()))
-            .title("DesktopGo")
+            .title(&app.package_info().name)
             .icon(window_icon)
             .expect("Failed to configure main window icon")
             .inner_size(initial_width, initial_height)
@@ -475,7 +475,8 @@ pub(crate) fn create_wallpaper_viewer_window(
         "wallpaper-viewer",
         tauri::WebviewUrl::App(url.into()),
     )
-    .title("壁纸预览")
+    .title(format!("{} — 壁纸预览", app.package_info().name))
+    .initialization_script(build_window_bootstrap_script(app, false))
     .icon(window_icon)
     .map_err(|error| format!("Failed to configure wallpaper viewer window icon: {error}"))?
     .on_page_load(|window, payload| {

@@ -242,11 +242,17 @@ pub(crate) fn build_window_bootstrap_script(
     include_window_style: bool,
 ) -> String {
     let theme_mode = read_saved_theme_mode(app).unwrap_or("system");
+    let app_info = serde_json::json!({
+        "name": app.package_info().name,
+        "version": app.package_info().version.to_string(),
+        "identifier": app.config().identifier,
+    });
     let _ = include_window_style;
 
     format!(
         r#"
 (() => {{
+  globalThis.__DESKTOPGO_APP_INFO__ = {app_info};
   const root = document.documentElement;
   if (!root) return;
   const themeMode = {theme_mode:?};

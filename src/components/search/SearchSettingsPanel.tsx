@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getSearchFilterOptions } from '@/lib/search/filters'
 import {
   DEFAULT_SEARCH_SETTINGS,
@@ -277,10 +277,10 @@ export function SearchSettingsPanel({ onOpenIconLibrary }: SearchSettingsPanelPr
 
             <SettingCard
               label={translate('仅支持已安装的 Everything')}
-              desc={translate('DesktopGo 的文件搜索目前仅支持已安装的 Everything 应用。')}
+              desc={translate('{appName} 的文件搜索目前仅支持已安装的 Everything 应用。')}
             >
               <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                {translate('如果搜索不可用，请重新安装 DesktopGo，并勾选 Everything 安装选项。')}
+                {translate('如果搜索不可用，请重新安装 {appName}，并勾选 Everything 安装选项。')}
               </p>
             </SettingCard>
           </SettingGroup>

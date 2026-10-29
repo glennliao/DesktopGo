@@ -6,6 +6,9 @@ import { initTheme } from './lib/theme'
 import { initWindowStyle } from './lib/windowStyle'
 import { applySavedAppearance } from './lib/appearance'
 import { attachConsole } from '@tauri-apps/plugin-log'
+import { appIdentity } from './lib/appIdentity'
+
+document.title = appIdentity.name
 
 // 前端 console.* 转发进 Rust 侧文件日志（%LOCALAPPDATA%\com.aixbox.desktopgo\logs\），
 // 安装版无 devtools 时也能留下现场。窗口销毁后 invoke 会失败，静默忽略。

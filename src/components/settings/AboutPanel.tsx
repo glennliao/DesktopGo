@@ -18,6 +18,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { formatShortcutForDisplay } from './shortcut'
+import { appIdentity } from '@/lib/appIdentity'
 
 type AboutAppInfo = {
   name: string
@@ -27,9 +28,7 @@ type AboutAppInfo = {
 }
 
 const ABOUT_APP_INFO_FALLBACK: AboutAppInfo = {
-  name: 'DesktopGo',
-  version: '1.0.4',
-  identifier: 'com.aixbox.desktopgo',
+  ...appIdentity,
   tauriVersion: '2',
 }
 
@@ -222,7 +221,7 @@ export function AboutPanel() {
               </div>
               <p className="max-w-xl text-sm leading-6 text-muted-foreground">
                 {translate(
-                  'DesktopGo 把桌面启动、文件搜索、图标整理和应用更新收进一个统一入口里。关于页现在直接暴露版本、运行时和项目入口，方便你确认当前构建、提交反馈，或跳转查看发布记录。'
+                  '{appName} 把桌面启动、文件搜索、图标整理和应用更新收进一个统一入口里。关于页现在直接暴露版本、运行时和项目入口，方便你确认当前构建、提交反馈，或跳转查看发布记录。'
                 )}
               </p>
             </div>
