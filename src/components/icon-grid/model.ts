@@ -1,4 +1,5 @@
 import type { DesktopIcon } from '../../types'
+import type { DirectoryLink } from '../directory-links/domain'
 
 export type HoverZone = 'left' | 'right' | 'up' | 'down' | 'center'
 export type EvasionDirection = 'left' | 'right' | 'up' | 'down'
@@ -22,6 +23,7 @@ export type FolderItem = {
   name: string
   size: FolderSize
   children: IconItem[]
+  directory?: DirectoryLink
 }
 
 export type GridItem = IconItem | FolderItem
@@ -109,6 +111,7 @@ export interface ScrollGroupMeta {
   name: string
   icon: ScrollGroupIcon
   itemIds: string[]
+  directory?: DirectoryLink
 }
 
 export type PersistedItem =
@@ -122,6 +125,7 @@ export type PersistedItem =
       name: string
       size?: FolderSize
       children: string[]
+      directory?: DirectoryLink
     }
 
 export interface PersistedGridCoordinate {

@@ -1,3 +1,4 @@
+import { CreateDirectoryMenuItem } from '../directory-links/DirectoryLinksHost'
 import { translate } from '@/lib/i18n'
 import { useIconStore } from '@/stores/iconStore'
 import type { IconSize, LaunchpadGridViewMode, TitleLineCount, WindowMode } from '@/types'
@@ -132,7 +133,9 @@ export function LaunchpadContextMenuContent({
     setLaunchpadGridViewMode,
     iconContextMenuMode,
     setIconContextMenuMode,
+    activeDirectoryListId,
   } = useIconStore()
+  const directoryActive = launchpadGridViewMode === 'paged' && Boolean(activeDirectoryListId)
 
   return (
     <ContextMenuContent className="w-44">
@@ -166,7 +169,7 @@ export function LaunchpadContextMenuContent({
       />
 
       <ContextMenuSub>
-        <ContextMenuSubTrigger className="gap-2">
+        <ContextMenuSubTrigger className="gap-2" disabled={directoryActive}>
           <FilePlus className={MENU_ICON_CLASS} aria-hidden="true" />
           {translate('新建')}
         </ContextMenuSubTrigger>
@@ -195,20 +198,26 @@ export function LaunchpadContextMenuContent({
       </ContextMenuSub>
 
       <ContextMenuSeparator />
-      <ContextMenuItem className="gap-2" disabled={addIconDisabled} onSelect={onAddIcon}>
+      <ContextMenuItem
+        className="gap-2"
+        disabled={addIconDisabled || directoryActive}
+        onSelect={onAddIcon}
+      >
         <Plus className={MENU_ICON_CLASS} aria-hidden="true" />
         {translate('添加快捷入口')}
       </ContextMenuItem>
-      <ContextMenuItem className="gap-2" onSelect={onSelectIcons}>
+      <CreateDirectoryMenuItem kind="list" disabled={addIconDisabled} />
+      <CreateDirectoryMenuItem kind="folder" disabled={addIconDisabled || directoryActive} />
+      <ContextMenuItem className="gap-2" disabled={directoryActive} onSelect={onSelectIcons}>
         <ListChecks className={MENU_ICON_CLASS} aria-hidden="true" />
         {translate('批量选择图标')}
       </ContextMenuItem>
-      <ContextMenuItem className="gap-2" onSelect={onAiOrganize}>
+      <ContextMenuItem className="gap-2" disabled={directoryActive} onSelect={onAiOrganize}>
         <Bot className={MENU_ICON_CLASS} aria-hidden="true" />
         {translate('AI 智能整理')}
       </ContextMenuItem>
       <ContextMenuSub>
-        <ContextMenuSubTrigger className="gap-2">
+        <ContextMenuSubTrigger className="gap-2" disabled={directoryActive}>
           <LayoutTemplate className={MENU_ICON_CLASS} aria-hidden="true" />
           {translate('布局')}
         </ContextMenuSubTrigger>

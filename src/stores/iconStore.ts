@@ -30,6 +30,7 @@ const resolveSelectableIconKeySet = (icons: DesktopIcon[]) =>
 
 interface IconStore {
   icons: DesktopIcon[]
+  iconsLoaded: boolean
   loading: boolean
   error: string | null
   iconSize: IconSize
@@ -38,6 +39,8 @@ interface IconStore {
   windowMode: WindowMode
   titleLineCount: TitleLineCount
   launchpadGridViewMode: LaunchpadGridViewMode
+  activeDirectoryListId: string | null
+  setActiveDirectoryListId: (id: string | null) => void
   dockEnabled: boolean
   iconContextMenuMode: IconContextMenuMode
   selectionMode: boolean
@@ -76,6 +79,7 @@ interface IconStore {
 
 export const useIconStore = create<IconStore>((set, get) => ({
   icons: [],
+  iconsLoaded: false,
   loading: false,
   error: null,
   iconSize: 'medium',
@@ -84,6 +88,9 @@ export const useIconStore = create<IconStore>((set, get) => ({
   windowMode: 'medium',
   titleLineCount: 'two',
   launchpadGridViewMode: 'paged',
+  activeDirectoryListId: null,
+  setActiveDirectoryListId: id =>
+    set({ activeDirectoryListId: id, selectionMode: false, selectedIconKeys: [] }),
   dockEnabled: true,
   iconContextMenuMode: 'custom',
   selectionMode: false,
@@ -93,7 +100,9 @@ export const useIconStore = create<IconStore>((set, get) => ({
   editRequestedIcon: null,
 
   fetchIcons: async () => {
-    if (get().icons.length === 0) {
+    // An empty library may still contain linked folders in its layout.
+    // Later refreshes must not unmount that grid while a directory picker returns.
+    if (!get().iconsLoaded) {
       set({ loading: true, error: null })
     }
     try {
@@ -107,6 +116,7 @@ export const useIconStore = create<IconStore>((set, get) => ({
       const nextSelectedKeys = selectedIconKeys.filter(key => iconKeySet.has(key))
       set({
         icons,
+        iconsLoaded: true,
         loading: false,
         error: null,
         selectedIconKeys: nextSelectedKeys,

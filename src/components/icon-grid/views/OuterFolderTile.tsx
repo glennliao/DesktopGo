@@ -1,7 +1,9 @@
-import { AppWindow, Ungroup } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { DirectoryLinkMenuItems } from '../../directory-links/DirectoryLinksHost'
+import { AppWindow, FolderOpen, Ungroup, Link2 } from 'lucide-react'
+import { motion, useInView } from 'framer-motion'
 import {
   memo,
+  useRef,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
@@ -32,8 +34,15 @@ import {
 } from './folderVisualPolicy'
 import { FolderIconVisual } from './FolderVisuals'
 import { getDesktopLargeFolderPreviewLayout } from './folderPreviewPolicy'
+import { useLinkedFolderPreview } from '../../directory-links/useLinkedFolderPreview'
+import { useDirectoryActions } from '../../directory-links/directoryActions'
 
 interface OuterFolderTileProps {
+  onOpenDirectory?: (relativePath: string) => void
+  directoryRelativePath?: string
+  onRevealFolder?: () => void
+  readOnly?: boolean
+  preferredSize?: FolderSize
   folder: FolderItem
   span: GridSpan
   slotWidth: number
@@ -47,7 +56,7 @@ interface OuterFolderTileProps {
   onClickCapture: (event: ReactMouseEvent<HTMLDivElement>) => void
   onOpenFolder: (folderId: string) => void
   onLaunchIcon: (path: string) => void
-  onResizeFolder: (folderId: string, size: FolderSize) => void
+  onResizeFolder?: (folderId: string, size: FolderSize) => void
   onDissolveFolder: (folderId: string) => void
 }
 
@@ -455,6 +464,15 @@ function FolderBody({
                   : undefined,
           }}
         >
+          {previewIcons.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <FolderIconVisual
+                icons={[]}
+                imgSize={Math.round(Math.min(shapeWidth, shapeHeight) * 0.65)}
+                withSurface={false}
+              />
+            </div>
+          ) : null}
           {standardPreviewIcons.map(icon => (
             <PreviewIconButton
               key={icon.key}
@@ -498,7 +516,31 @@ function OuterFolderTileComponent({
   onLaunchIcon,
   onResizeFolder,
   onDissolveFolder,
+  readOnly = false,
+  onOpenDirectory,
+  directoryRelativePath,
+  onRevealFolder,
+  preferredSize,
 }: OuterFolderTileProps) {
+  const tileRef = useRef<HTMLDivElement>(null)
+  const visible = useInView(tileRef, { margin: '120px' })
+  const { display, entries } = useLinkedFolderPreview(folder, visible, directoryRelativePath)
+  const directoryActions = useDirectoryActions()
+  const openAtPath = (path = '') => {
+    if (onOpenDirectory) {
+      onOpenDirectory(path)
+      return
+    }
+    if (folder.directory) directoryActions?.prepareFolderOpen(folder.id, path)
+    onOpenFolder(folder.id)
+  }
+  const activatePreview = (path: string) => {
+    const entry = !folder.children.some(child => child.icon.path === path)
+      ? entries.find(entry => entry.path === path)
+      : undefined
+    if (entry?.isDirectory && entry.canEnter) openAtPath(entry.relativePath)
+    else onLaunchIcon(path)
+  }
   const titleLineCount = useIconStore(state => state.titleLineCount)
   const titleMetrics = getIconGridTitleMetrics(titleLineCount)
   const {
@@ -523,17 +565,24 @@ function OuterFolderTileComponent({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div
+          ref={tileRef}
           data-icon
           className="relative h-full w-full touch-none"
           onPointerDown={onPointerDown}
           onClickCapture={onClickCapture}
         >
+          {folder.directory && !onOpenDirectory ? (
+            <Link2
+              aria-label={translate('关联目录')}
+              className="pointer-events-none absolute right-1 top-1 z-10 h-3 w-3 text-primary"
+            />
+          ) : null}
           <div
             className="flex h-full w-full flex-col items-center"
             style={{ padding: `${TILE_PADDING}px 0`, rowGap: `${BODY_TITLE_GAP}px` }}
           >
             <FolderBody
-              folder={folder}
+              folder={display}
               bodyWidth={bodyWidth}
               bodyHeight={bodyHeight}
               shapeWidth={shapeWidth}
@@ -544,8 +593,8 @@ function OuterFolderTileComponent({
               folderOpen={folderOpen}
               sharedLayoutActive={sharedLayoutActive}
               selectionMode={selectionMode}
-              onOpenFolder={onOpenFolder}
-              onLaunchIcon={onLaunchIcon}
+              onOpenFolder={() => openAtPath()}
+              onLaunchIcon={activatePreview}
             />
             <button
               type="button"
@@ -558,7 +607,7 @@ function OuterFolderTileComponent({
               title={folder.name}
               onClick={event => {
                 event.stopPropagation()
-                onOpenFolder(folder.id)
+                openAtPath()
               }}
             >
               <span
@@ -587,43 +636,61 @@ function OuterFolderTileComponent({
           <ContextMenuItem
             className="px-3 py-2 text-foreground/85 focus:bg-accent focus:text-foreground"
             onSelect={() => {
-              onOpenFolder(folder.id)
+              openAtPath()
             }}
           >
             {translate(MENU_OPEN_LABEL)}
           </ContextMenuItem>
-          <ContextMenuItem
-            className="gap-2 px-3 py-2 text-red-700 focus:bg-red-500/12 focus:text-red-800 dark:text-red-200 dark:focus:bg-red-500/25 dark:focus:text-red-100"
-            onSelect={() => {
-              onDissolveFolder(folder.id)
-            }}
-          >
-            <Ungroup className="h-4 w-4" aria-hidden="true" />
-            <span>{translate(MENU_DISSOLVE_LABEL)}</span>
-          </ContextMenuItem>
-          <ContextMenuSeparator className="mx-1 my-1 bg-border/70" />
-          <ContextMenuLabel className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            {translate(MENU_SIZE_LABEL)}
-          </ContextMenuLabel>
-          <ContextMenuRadioGroup
-            value={folder.size}
-            onValueChange={value => {
-              onResizeFolder(folder.id, value as FolderSize)
-            }}
-          >
-            {FOLDER_SIZES.map(option => (
-              <ContextMenuRadioItem
-                key={option.value}
-                value={option.value}
-                className="px-3 py-1.5 text-foreground/85 focus:bg-accent focus:text-foreground data-[state=checked]:bg-accent/80 data-[state=checked]:text-foreground"
+          {onRevealFolder ? (
+            <ContextMenuItem className="gap-2 px-3 py-2" onSelect={onRevealFolder}>
+              <FolderOpen className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              {translate('在资源管理器中打开')}
+            </ContextMenuItem>
+          ) : null}
+          {!readOnly ? (
+            <>
+              <DirectoryLinkMenuItems kind="folder" id={folder.id} directory={folder.directory} />
+              <ContextMenuItem
+                className="gap-2 px-3 py-2 text-red-700 focus:bg-red-500/12 focus:text-red-800 dark:text-red-200 dark:focus:bg-red-500/25 dark:focus:text-red-100"
+                onSelect={() => {
+                  onDissolveFolder(folder.id)
+                }}
               >
-                <div className="flex items-center gap-3 pr-4">
-                  <FolderSizePreview span={option.span} active={folder.size === option.value} />
-                  <span className="text-sm font-medium leading-none">{option.label}</span>
-                </div>
-              </ContextMenuRadioItem>
-            ))}
-          </ContextMenuRadioGroup>
+                <Ungroup className="h-4 w-4" aria-hidden="true" />
+                <span>{translate(MENU_DISSOLVE_LABEL)}</span>
+              </ContextMenuItem>
+            </>
+          ) : null}
+          {onResizeFolder ? (
+            <>
+              <ContextMenuSeparator className="mx-1 my-1 bg-border/70" />
+              <ContextMenuLabel className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                {translate(MENU_SIZE_LABEL)}
+              </ContextMenuLabel>
+              <ContextMenuRadioGroup
+                value={preferredSize ?? folder.size}
+                onValueChange={value => {
+                  onResizeFolder?.(folder.id, value as FolderSize)
+                }}
+              >
+                {FOLDER_SIZES.map(option => (
+                  <ContextMenuRadioItem
+                    key={option.value}
+                    value={option.value}
+                    className="px-3 py-1.5 text-foreground/85 focus:bg-accent focus:text-foreground data-[state=checked]:bg-accent/80 data-[state=checked]:text-foreground"
+                  >
+                    <div className="flex items-center gap-3 pr-4">
+                      <FolderSizePreview
+                        span={option.span}
+                        active={(preferredSize ?? folder.size) === option.value}
+                      />
+                      <span className="text-sm font-medium leading-none">{option.label}</span>
+                    </div>
+                  </ContextMenuRadioItem>
+                ))}
+              </ContextMenuRadioGroup>
+            </>
+          ) : null}
         </ContextMenuContent>
       ) : null}
     </ContextMenu>
@@ -633,6 +700,11 @@ function OuterFolderTileComponent({
 export const OuterFolderTile = memo(
   OuterFolderTileComponent,
   (previous, next) =>
+    previous.preferredSize === next.preferredSize &&
+    previous.onOpenDirectory === next.onOpenDirectory &&
+    previous.directoryRelativePath === next.directoryRelativePath &&
+    previous.onRevealFolder === next.onRevealFolder &&
+    previous.readOnly === next.readOnly &&
     previous.folder === next.folder &&
     previous.span.cols === next.span.cols &&
     previous.span.rows === next.span.rows &&

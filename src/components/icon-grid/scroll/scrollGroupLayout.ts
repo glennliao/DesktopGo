@@ -1,4 +1,6 @@
-import type { PageAnchorEntry } from '../domain/topLevelLayout'
+import { placeGridItems as buildScrollGroupEntries } from '../domain/gridPlacement'
+export { buildScrollGroupEntries }
+import { parseDirectoryLink } from '../../directory-links/domain'
 import {
   buildFolderAutoOpenOrder,
   canExitFolderThroughMask,
@@ -6,8 +8,7 @@ import {
   FOLDER_EXIT_DWELL_MS,
   isPointOutsideFolderContent,
 } from '../domain/folderPolicy'
-import type { GridItem, ScrollGroupIcon, ScrollGroupMeta } from '../model'
-import { getGridItemSpan } from '../model'
+import type { ScrollGroupIcon, ScrollGroupMeta } from '../model'
 
 const LEGACY_GROUP_ID_PREFIX = 'scroll-group-migrated'
 export const SCROLL_PREVIEW_REORDER_DWELL_MS = 100
@@ -84,6 +85,7 @@ export const normalizeScrollGroups = ({
     id: createUniqueGroupId(group.id ?? '', index, usedGroupIds),
     name: group.name.trim() || defaultName(index),
     icon: group.icon,
+    ...(group.directory ? { directory: parseDirectoryLink(group.directory) } : {}),
     itemIds: [] as string[],
   }))
   const consumed = new Set<string>()
@@ -162,77 +164,6 @@ export const commitScrollGroupItemOrder = (
   return groups.map((group, index) =>
     index === groupIndex ? { ...group, itemIds: nextIds } : group
   )
-}
-
-export const buildScrollGroupEntries = (
-  itemIds: string[],
-  itemById: ReadonlyMap<string, GridItem>,
-  columns: number,
-  reservedEntries: PageAnchorEntry[] = []
-): PageAnchorEntry[] => {
-  const minimumColumns = itemIds.reduce((maximum, id) => {
-    const item = itemById.get(id)
-    return item ? Math.max(maximum, getGridItemSpan(item).cols) : maximum
-  }, 1)
-  const safeColumns = Math.max(minimumColumns, Math.floor(columns))
-  const occupiedCells = new Set<number>()
-  const reservedIds = new Set<string>()
-  const entries: PageAnchorEntry[] = []
-
-  reservedEntries.forEach(entry => {
-    if (reservedIds.has(entry.id)) return
-    reservedIds.add(entry.id)
-    entries.push(entry)
-    for (let rowOffset = 0; rowOffset < entry.span.rows; rowOffset += 1) {
-      for (let colOffset = 0; colOffset < entry.span.cols; colOffset += 1) {
-        occupiedCells.add((entry.row + rowOffset) * safeColumns + entry.col + colOffset)
-      }
-    }
-  })
-
-  itemIds.forEach(id => {
-    if (reservedIds.has(id)) return
-    const item = itemById.get(id)
-    if (!item) return
-    const rawSpan = getGridItemSpan(item)
-    const span = {
-      cols: Math.max(1, rawSpan.cols),
-      rows: Math.max(1, rawSpan.rows),
-    }
-    let anchorIndex = 0
-
-    while (true) {
-      const row = Math.floor(anchorIndex / safeColumns)
-      const col = anchorIndex % safeColumns
-      if (col + span.cols > safeColumns) {
-        anchorIndex += safeColumns - col
-        continue
-      }
-
-      const footprint: number[] = []
-      for (let rowOffset = 0; rowOffset < span.rows; rowOffset += 1) {
-        for (let colOffset = 0; colOffset < span.cols; colOffset += 1) {
-          footprint.push((row + rowOffset) * safeColumns + col + colOffset)
-        }
-      }
-      if (footprint.every(cell => !occupiedCells.has(cell))) {
-        footprint.forEach(cell => occupiedCells.add(cell))
-        entries.push({
-          id,
-          item,
-          globalIndex: anchorIndex,
-          localIndex: anchorIndex,
-          row,
-          col,
-          span,
-        })
-        break
-      }
-      anchorIndex += 1
-    }
-  })
-
-  return entries.sort((a, b) => a.row - b.row || a.col - b.col)
 }
 
 export const isPointInScrollMergeZone = (

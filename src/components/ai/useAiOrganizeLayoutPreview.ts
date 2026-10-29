@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import type { DesktopIcon, LaunchpadGridViewMode } from '@/types'
 import { normalizeWebsiteUrl } from '@/lib/websiteIcon'
-import { applyAiGroupsToLayout, type AiGroup } from '@/lib/aiOrganize'
+import { type AiGroup } from '@/lib/aiOrganize'
+import { applyAiGroupsPreservingDirectories } from '../directory-links/aiLayoutPolicy'
 import { buildIconSelectionKey } from '@/stores/iconStore'
 import type { AiWebsiteAddition } from '@/lib/aiOrganizeSessions'
 import { createAiWebsiteIcon, findWebsiteIcon } from './aiWebsiteIconService'
@@ -138,7 +139,11 @@ export const useAiOrganizeLayoutPreview = ({
         websiteAdditions.length > 0 ? await ensurePreviewWebsiteIcons(websiteAdditions) : icons
       const previewIcons = filterPreviewIcons(allPreviewIcons, websiteAdditions)
       const currentItems = hydrateItems(previewIcons, baseline?.layout?.items ?? null)
-      let nextItems = applyAiGroupsToLayout(currentItems, aiGroups)
+      let nextItems = applyAiGroupsPreservingDirectories(
+        currentItems,
+        aiGroups,
+        baseline?.layout ?? null
+      )
       let nextDockKeys = (baseline?.layout?.dockKeys ?? []).filter(
         (key): key is string => typeof key === 'string'
       )
@@ -234,9 +239,10 @@ export const useAiOrganizeLayoutPreview = ({
       }
 
       const usableIcons = filterPreviewIcons(latestIcons, websiteAdditions)
-      let nextItems = applyAiGroupsToLayout(
+      let nextItems = applyAiGroupsPreservingDirectories(
         hydrateItems(usableIcons, persisted?.items ?? null),
-        aiGroups
+        aiGroups,
+        persisted
       )
       let nextDockKeys = (persisted?.dockKeys ?? []).filter(
         (key): key is string => typeof key === 'string'

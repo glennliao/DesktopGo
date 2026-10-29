@@ -34,6 +34,7 @@ import {
   scaledRadius,
 } from './folderVisualPolicy'
 import { FolderIconVisual } from './FolderVisuals'
+import { LinkedFolderIconVisual } from '../../directory-links/LinkedFolderIconVisual'
 
 interface DockBarProps {
   alignToContentColumn?: boolean
@@ -810,10 +811,9 @@ export function DockBar({
                                     borderRadius: scaledRadius(singleSlotFolderMetrics.surfaceRadius),
                                   }}
                                 >
-                                  <FolderIconVisual
-                                    icons={item.children.map(child => child.icon)}
+                                  <LinkedFolderIconVisual
+                                    folder={item}
                                     imgSize={singleSlotFolderMetrics.previewSize}
-                                    withSurface={false}
                                   />
                                 </motion.div>
                               </div>

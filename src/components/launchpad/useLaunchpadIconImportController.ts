@@ -406,6 +406,13 @@ export function useLaunchpadIconImportController({
       type: 'enter' | 'over' | 'leave' | 'drop',
       items: NativeFileDragItem[] = []
     ) => {
+      const { launchpadGridViewMode, activeDirectoryListId } = useIconStore.getState()
+      if (launchpadGridViewMode === 'paged' && activeDirectoryListId) {
+        setIsExternalDragActive(false)
+        if (type === 'drop')
+          toast.info(translate('请切换到快捷入口后导入图标。'), { key: 'linked-list-import' })
+        return
+      }
       if (type === 'enter' || type === 'over') {
         setIsExternalDragActive(true)
         return
@@ -443,7 +450,7 @@ export function useLaunchpadIconImportController({
       unlisten?.()
       unlistenNative?.()
     }
-  }, [isImportingDrop, prepareDroppedPaths])
+  }, [isImportingDrop, prepareDroppedPaths, toast])
 
   return {
     addIconDialogOpen,

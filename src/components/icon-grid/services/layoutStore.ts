@@ -14,6 +14,7 @@ import type {
 } from '../model'
 import { makeFolderId, SCROLL_GROUP_ICONS } from '../model'
 import type { DesktopIcon } from '../../../types'
+import { DIRECTORY_LISTS_CHANGED_EVENT, parseDirectoryLink } from '../../directory-links/domain'
 import { buildIconSelectionKey } from '../../../lib/iconKey'
 import { recordAutoLayoutSnapshot } from '../../layout-library/layoutLibrary'
 
@@ -40,6 +41,7 @@ export const serializeItems = (items: GridItem[]): PersistedItem[] =>
           name: item.name,
           size: item.size,
           children: item.children.map(child => child.key),
+          directory: item.directory,
         }
   )
 
@@ -221,6 +223,7 @@ export const parsePersistedLayout = (raw: string): PersistedLayout | null => {
             id: id || `scroll-group-migrated-${index + 1}`,
             name,
             icon: icon as ScrollGroupIcon,
+            directory: parseDirectoryLink('directory' in entry ? entry.directory : undefined),
             itemIds,
           } satisfies ScrollGroupMeta,
         ]
@@ -308,12 +311,14 @@ export const writeLayout = async (
     payload: serialized,
   })
   recordAutoLayoutSnapshot(serialized, scope)
+  if (scope === 'scroll') window.dispatchEvent(new Event(DIRECTORY_LISTS_CHANGED_EVENT))
 }
 
 /** 读取当前布局的原始 payload（版本迁移、恢复预览都按原串写回，避免二次序列化丢字段）。 */
 export const readLayoutPayload = async (
   scope: LaunchpadLayoutScope = 'paged'
-): Promise<string | null> => invoke<string | null>('get_layout_payload', { key: getLayoutKey(scope) })
+): Promise<string | null> =>
+  invoke<string | null>('get_layout_payload', { key: getLayoutKey(scope) })
 
 /**
  * 直接把一份原始 payload 写回当前布局。
@@ -354,6 +359,7 @@ export const writePersistedLayout = async (
     key: getLayoutKey(scope),
     payload: JSON.stringify(payload),
   })
+  if (scope === 'scroll') window.dispatchEvent(new Event(DIRECTORY_LISTS_CHANGED_EVENT))
 }
 
 export const resetLaunchpadLayout = async () => {
@@ -409,13 +415,15 @@ const hydrateItemsWithFolderAliases = (
         children.push(iconItem)
       })
 
-      if (children.length >= 2) {
+      const directory = parseDirectoryLink(item.directory)
+      if (children.length >= 2 || directory) {
         result.push({
           kind: 'folder',
           id: item.id || makeFolderId(),
           name: item.name || translate('New Folder'),
           size: item.size ?? '1x1',
           children,
+          directory,
         })
       } else if (children.length === 1) {
         result.push(children[0])

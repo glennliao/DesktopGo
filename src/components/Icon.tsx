@@ -15,10 +15,13 @@ import {
   useRef,
   useState,
   type ChangeEvent,
+  type ReactElement,
+  type ReactNode,
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 
 interface IconProps {
+  contextMenu?: (element: ReactElement) => ReactNode
   icon: DesktopIcon
   selectionKey: string
   selectionMode: boolean
@@ -31,6 +34,7 @@ interface IconProps {
 
 export const Icon = memo(function Icon({
   icon,
+  contextMenu,
   selectionKey,
   selectionMode,
   selected,
@@ -51,20 +55,20 @@ export const Icon = memo(function Icon({
   const tileHeight = getIconGridRowHeight(iconSize)
   const isSingleLineTitle = titleLineCount === 'one'
   const titleMetrics = getIconGridTitleMetrics(titleLineCount)
-  const displayName = customName ?? icon.name
+  const displayName = contextMenu ? icon.name : (customName ?? icon.name)
 
   const [isRenaming, setIsRenaming] = useState(false)
   const [draftName, setDraftName] = useState(displayName)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
-    if (renameTriggerPath && renameTriggerPath === icon.path) {
+    if (!contextMenu && renameTriggerPath && renameTriggerPath === icon.path) {
       // An external context-menu request intentionally opens this local editor.
       setDraftName(displayName)
       setIsRenaming(true)
       clearRenameTrigger()
     }
-  }, [renameTriggerPath, icon.path, displayName, clearRenameTrigger])
+  }, [renameTriggerPath, icon.path, displayName, clearRenameTrigger, contextMenu])
 
   useEffect(() => {
     if (isRenaming && inputRef.current) {
@@ -131,101 +135,105 @@ export const Icon = memo(function Icon({
         ? 'scroll-grid-icon-surface'
         : 'launchpad-icon-motion'
 
-  return (
-    <IconContextMenu icon={icon} disabled={selectionMode || isRenaming}>
-      <button
-        data-icon
-        data-selection-key={selectionKey}
-        data-selection-mode={selectionMode ? 'on' : 'off'}
-        className={`icon-item relative flex flex-col items-center justify-start rounded-icon-tile border-none px-3 shadow-none cursor-pointer group ${
-          usesScrollMotion ? 'scroll-grid-icon-tile' : 'transition-all duration-200'
-        } ${buttonStateClass} ${layerClass} ${
-          highlighted ? 'launchpad-import-highlight-edge' : ''
-        }`}
-        style={{
-          width: config.containerWidth,
-          height: tileHeight,
-          paddingTop: ICON_GRID_TILE_PADDING_Y,
-          paddingBottom: ICON_GRID_TILE_PADDING_Y,
-          rowGap: ICON_GRID_TITLE_GAP,
-        }}
-        onClick={handleClick}
-        title={displayName}
-        aria-label={displayName}
-        aria-pressed={selectionMode ? selected : undefined}
-      >
-        {selectionMode ? (
-          <span
-            className={`absolute right-0.5 top-0.5 z-50 flex h-4 w-4 items-center justify-center rounded-full border text-xs ${
-              selected
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border/70 bg-background/72 text-transparent shadow-sm dark:border-white/60 dark:bg-black/30'
-            }`}
-          >
-            {selected ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
-          </span>
-        ) : null}
-
-        <div
-          className={`icon-image flex flex-1 items-center justify-center overflow-hidden ${
-            usesScrollMotion ? '' : 'transition-all duration-200'
-          } ${imageMotionClass}`}
-          style={{ width: config.imgSize, height: config.imgSize }}
+  const element = (
+    <button
+      data-icon
+      data-selection-key={contextMenu ? undefined : selectionKey}
+      data-directory-entry-id={contextMenu ? selectionKey : undefined}
+      data-selection-mode={selectionMode ? 'on' : 'off'}
+      className={`icon-item relative flex flex-col items-center justify-start rounded-icon-tile border-none px-3 shadow-none cursor-pointer group ${
+        usesScrollMotion ? 'scroll-grid-icon-tile' : 'transition-all duration-200'
+      } ${buttonStateClass} ${layerClass} ${highlighted ? 'launchpad-import-highlight-edge' : ''}`}
+      style={{
+        width: config.containerWidth,
+        height: tileHeight,
+        paddingTop: ICON_GRID_TILE_PADDING_Y,
+        paddingBottom: ICON_GRID_TILE_PADDING_Y,
+        rowGap: ICON_GRID_TITLE_GAP,
+      }}
+      onClick={handleClick}
+      title={displayName}
+      aria-label={displayName}
+      aria-pressed={selectionMode ? selected : undefined}
+    >
+      {selectionMode ? (
+        <span
+          className={`absolute right-0.5 top-0.5 z-50 flex h-4 w-4 items-center justify-center rounded-full border text-xs ${
+            selected
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'border-border/70 bg-background/72 text-transparent shadow-sm dark:border-white/60 dark:bg-black/30'
+          }`}
         >
-          {icon.icon_base64 ? (
-            <img
-              src={icon.icon_base64}
-              alt={displayName}
-              style={{ width: config.imgSize, height: config.imgSize }}
-              className="launchpad-icon-artwork object-contain"
-              draggable={false}
-            />
-          ) : (
-            <AppWindow className="launchpad-icon-artwork h-8 w-8 text-foreground/60" />
-          )}
-        </div>
-        {isRenaming ? (
-          <input
-            ref={inputRef}
-            type="text"
-            value={draftName}
-            onChange={handleInputChange}
-            onKeyDown={handleInputKeyDown}
-            onBlur={commitRename}
-            onClick={event => event.stopPropagation()}
-            onPointerDown={event => event.stopPropagation()}
-            onContextMenu={event => event.stopPropagation()}
-            className="icon-label-input rounded-md border border-border/60 bg-background/95 px-1 py-[1px] text-[11px] leading-[13px] text-center text-foreground shadow-sm outline-none focus:border-ring dark:border-white/30 dark:bg-black/60"
-            style={{
-              maxWidth: config.containerWidth - 4,
-              width: config.containerWidth - 4,
-              height: isSingleLineTitle ? 15 : 28,
-            }}
-            maxLength={64}
+          {selected ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
+        </span>
+      ) : null}
+
+      <div
+        className={`icon-image flex flex-1 items-center justify-center overflow-hidden ${
+          usesScrollMotion ? '' : 'transition-all duration-200'
+        } ${imageMotionClass}`}
+        style={{ width: config.imgSize, height: config.imgSize }}
+      >
+        {icon.icon_base64 ? (
+          <img
+            src={icon.icon_base64}
+            alt={displayName}
+            style={{ width: config.imgSize, height: config.imgSize }}
+            className="launchpad-icon-artwork object-contain"
+            draggable={false}
           />
         ) : (
-          <span
-            className="icon-label text-[11px] text-center leading-[15px] text-foreground drop-shadow-md"
-            style={{
-              // 标题不受磁贴左右 padding 限制，和 hover 背景保持同宽。
-              width: config.containerWidth,
-              maxWidth: config.containerWidth,
-              marginInline: -12,
-              flexShrink: 0,
-              height: titleMetrics.height,
-              display: isSingleLineTitle ? 'block' : '-webkit-box',
-              WebkitLineClamp: titleMetrics.lineClamp,
-              WebkitBoxOrient: isSingleLineTitle ? undefined : 'vertical',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: isSingleLineTitle ? 'nowrap' : 'normal',
-              overflowWrap: 'anywhere',
-            }}
-          >
-            {displayName}
-          </span>
+          <AppWindow className="launchpad-icon-artwork h-8 w-8 text-foreground/60" />
         )}
-      </button>
+      </div>
+      {isRenaming ? (
+        <input
+          ref={inputRef}
+          type="text"
+          value={draftName}
+          onChange={handleInputChange}
+          onKeyDown={handleInputKeyDown}
+          onBlur={commitRename}
+          onClick={event => event.stopPropagation()}
+          onPointerDown={event => event.stopPropagation()}
+          onContextMenu={event => event.stopPropagation()}
+          className="icon-label-input rounded-md border border-border/60 bg-background/95 px-1 py-[1px] text-[11px] leading-[13px] text-center text-foreground shadow-sm outline-none focus:border-ring dark:border-white/30 dark:bg-black/60"
+          style={{
+            maxWidth: config.containerWidth - 4,
+            width: config.containerWidth - 4,
+            height: isSingleLineTitle ? 15 : 28,
+          }}
+          maxLength={64}
+        />
+      ) : (
+        <span
+          className="icon-label text-[11px] text-center leading-[15px] text-foreground drop-shadow-md"
+          style={{
+            // 标题不受磁贴左右 padding 限制，和 hover 背景保持同宽。
+            width: config.containerWidth,
+            maxWidth: config.containerWidth,
+            marginInline: -12,
+            flexShrink: 0,
+            height: titleMetrics.height,
+            display: isSingleLineTitle ? 'block' : '-webkit-box',
+            WebkitLineClamp: titleMetrics.lineClamp,
+            WebkitBoxOrient: isSingleLineTitle ? undefined : 'vertical',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: isSingleLineTitle ? 'nowrap' : 'normal',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {displayName}
+        </span>
+      )}
+    </button>
+  )
+  return contextMenu ? (
+    contextMenu(element)
+  ) : (
+    <IconContextMenu icon={icon} disabled={selectionMode || isRenaming}>
+      {element}
     </IconContextMenu>
   )
 })

@@ -118,7 +118,7 @@ export const replaceFolderChildren = (
   if (!current || current.kind !== 'folder') return items
 
   const next = [...items]
-  if (nextChildren.length >= 2) {
+  if (nextChildren.length >= 2 || current.directory) {
     next[index] = { ...current, children: nextChildren }
     return next
   }
@@ -147,7 +147,7 @@ export const finalizeFolderExtractionInTopLevelLayout = (
   if (index < 0) return { items, outerSlots, dockKeys }
   const folder = items[index]
   if (!folder || folder.kind !== 'folder') return { items, outerSlots, dockKeys }
-  if (folder.children.length >= 2) return { items, outerSlots, dockKeys }
+  if (folder.children.length >= 2 || folder.directory) return { items, outerSlots, dockKeys }
 
   const folderSlotId = `folder:${folderId}`
   const nextItems = [...items]
@@ -229,11 +229,11 @@ export const dissolveFolderInTopLevelLayout = (
   let cursor = outerSlots.indexOf(folderSlotId)
   let firstChildIndex = 0
   if (dockSlotIndex >= 0) {
-    nextDockKeys = dockKeys.map(key => (key === folderSlotId ? children[0].key : key))
+    nextDockKeys = dockKeys.map(key => (key === folderSlotId ? (children[0]?.key ?? null) : key))
     firstChildIndex = 1
     if (cursor < 0) cursor = 0
   } else if (cursor >= 0) {
-    nextOuterSlots[cursor] = children[0].key
+    nextOuterSlots[cursor] = children[0]?.key ?? null
     firstChildIndex = 1
     cursor += 1
   } else {

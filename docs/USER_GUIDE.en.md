@@ -119,6 +119,21 @@ How to enter edit mode:
 - Right-click the empty launchpad background and click "Edit Icons"
 - Or long-press on the empty background
 
+### Linked Directories
+
+- Show the sidebar: right-click the background → Grid mode → Sidebar scroll.
+- Link a directory as a top-level list: right-click the background → Add linked list → choose a directory. Both grid modes support this action and keep the current mode. Switch lists using the top list bar in Paged grid or the left sidebar in Sidebar scroll.
+
+- Right-click the launchpad background and choose "Add linked folder" to select a directory. Existing folders also offer "Link directory" in their context menu. New linked folders use the existing `2×2` large-folder presentation and preview real directory icons. Change the size from the folder context menu. In a large cover, click a file to launch it or a subdirectory to browse that location; click the title to open all contents. Existing folder sizes are preserved.
+- In the scrolling layout, right-click a sidebar group and choose "Link directory" to display its contents directly in that group.
+- Subdirectories inside linked lists default to `2×2` covers with previews of their contents. Choose `1×1`, `1×2`, `2×1`, or `2×2` from Folder size in the context menu. Each choice is saved with that link and shared between paged and sidebar modes. Click a visible file to launch it or the title to browse the full directory. Smaller viewports temporarily reduce the footprint while retaining your selected size.
+- Top-level linked lists open subdirectories inline. Linked folders navigate inside their existing panel. The root has no back button; inside a subdirectory, Back and `Alt+Left` go to its parent. Breadcrumbs jump to ancestors. `Escape` closes a folder panel.
+- Linked lists share their names, directories and existing members across both modes, with paged or continuous scrolling presentation. Existing manual paged and sidebar arrangements remain separate. Manual list members open in paged mode; edit or rearrange them in the sidebar.
+- Existing manual entries stay first, followed by directory contents. Files stay in place and do not require individual imports. Ordinary imported directory icons retain their existing behavior.
+- Contents refresh when the launchpad is shown, when entering a directory, or when clicking Refresh. There is no continuous filesystem watcher.
+- Linked entries offer changing or unlinking their directory. Unlinking does not delete files; empty linked folders remain visible while linked.
+- Directory contents do not participate in manual drag organization, library deletion, or AI regrouping. Linked lists are saved with the existing sidebar data. The paged layout library saves linked-folder paths in the manual paged layout and reads their current contents when restored.
+
 ### 🗂️ Layout Library
 
 Paged grid arrangements can be stored and swapped back in as a whole.

@@ -1,4 +1,5 @@
-import { LayoutGroup } from 'framer-motion'
+import { GridPageDots } from './icon-grid/views/GridPageDots'
+import type { ReactNode } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   useEffect,
@@ -47,7 +48,8 @@ import { DragOverlays } from './icon-grid/views/DragOverlays'
 import { OuterGridView } from './icon-grid/views/OuterGridView'
 import { resolveGridPreviewFootprint } from './icon-grid/domain/gridPreviewFootprint'
 import { EdgeGlow } from './icon-grid/views/EdgeGlow'
-import { FolderModalView } from './icon-grid/views/FolderModalView'
+import { GridFolderModal } from './directory-links/GridFolderModal'
+import { DirectoryLinksHost } from './directory-links/DirectoryLinksHost'
 import { DockBar } from './icon-grid/views/DockBar'
 import {
   dissolveFolderInTopLevelLayout,
@@ -70,9 +72,6 @@ import {
   FOLDER_SHARED_LAYOUT_WINDOW_MS,
   GRID_GAP,
   LAYOUT_PAGE_STEP_EVENT,
-  PAGINATION_ACTIVE_WIDTH,
-  PAGINATION_DOT_GAP,
-  PAGINATION_DOT_SIZE,
   REORDER_ANIMATION_MS,
   SIDE_ARROW_OFFSET,
   WHEEL_PAGE_COOLDOWN_MS,
@@ -80,6 +79,8 @@ import {
 } from './icon-grid/constants'
 
 interface IconGridProps {
+  emptyContent?: ReactNode
+  contentOverride?: ReactNode
   icons: DesktopIcon[]
   layoutResetToken: number
   importPlacementRequest?: PagedImportPlacementRequest | null
@@ -94,9 +95,11 @@ const EVASION_COOLDOWN_MS = 200
 
 export function IconGrid({
   icons,
+  emptyContent,
   layoutResetToken,
   importPlacementRequest,
   paginationBottom = 0,
+  contentOverride,
   interactionLocked = false,
 }: IconGridProps) {
   const {
@@ -107,7 +110,6 @@ export function IconGrid({
     selectedIconKeys,
     toggleSelectIcon,
     unselectIcons,
-    clearSelection,
     launchApp,
   } = useIconStore()
   const folderPanelRef = useRef<HTMLDivElement>(null)
@@ -123,7 +125,6 @@ export function IconGrid({
   const layoutRowHeight = getIconGridLayoutRowHeight(iconSize)
   const rowHeight = getIconGridRowHeight(iconSize)
   const geometryKey = buildGeometryKey(windowMode, iconSize, dockEnabled)
-  const [hoverPage, setHoverPage] = useState<number | null>(null)
   const [openFolderId, setOpenFolderId] = useState<string | null>(null)
   const [activeFolderSharedLayoutId, setActiveFolderSharedLayoutId] = useState<string | null>(null)
   const {
@@ -490,7 +491,6 @@ export function IconGrid({
   const outerRenderCount = Math.max(pageSize, renderOrder.length)
   const pageCount = Math.max(1, Math.ceil(outerRenderCount / pageSize))
   if (currentPage >= pageCount) setCurrentPage(pageCount - 1)
-  if (hoverPage !== null && hoverPage >= pageCount) setHoverPage(null)
 
   const stepPageByWheelDelta = (primaryDelta: number, isOuterDrag: boolean) => {
     if (pageCount <= 1 || Math.abs(primaryDelta) < 0.1) return
@@ -801,7 +801,14 @@ export function IconGrid({
   const canGoRight = currentPage < pageCount - 1
 
   return (
-    <LayoutGroup id="folder-shell-layout">
+    <DirectoryLinksHost
+      itemsRef={itemsRef}
+      setItems={setItems}
+      outerSlotsRef={outerSlotsRef}
+      setOuterSlots={setOuterSlots}
+      dockKeysRef={dockKeysRef}
+      setDockKeys={setDockKeys}
+    >
       <div
         /* pb-32：底部内边距每 +8px 都可能跨过一个行位（行高 112+8），pb-40 会让
            medium 图标在 720px 窗口下从 4 行掉到 3 行，故分页网格固定 pb-32。
@@ -810,60 +817,69 @@ export function IconGrid({
            不再被垂直居中推到窗口中部。 */
         data-single-item-dragging={isSingleDragActive ? 'true' : 'false'}
         className={`relative h-full w-full px-16 pt-28 ${dockEnabled ? 'pb-32' : 'pb-12'}`}
-        onWheel={handleWheelPageSwitch}
+        onWheel={contentOverride ? undefined : handleWheelPageSwitch}
       >
+        {!contentOverride && items.length === 0 ? (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+            <div className="pointer-events-auto">{emptyContent}</div>
+          </div>
+        ) : null}
         <EdgeGlow direction="left" active={dragEdgeDirection === 'left'} />
         <EdgeGlow direction="right" active={dragEdgeDirection === 'right'} />
         <div ref={containerRef} className="flex h-full w-full items-start justify-center">
-          <OuterGridView
-            gridRef={gridRef}
-            gridWidth={gridWidth}
-            gridHeight={gridHeight}
-            columns={columns}
-            rows={rows}
-            itemWidth={itemWidth}
-            itemHeight={itemHeight}
-            gridGap={GRID_GAP}
-            pageCellCount={pageSize}
-            currentPage={currentPage}
-            pageAnchorEntries={pageAnchorEntries}
-            dragContext={dragState?.context === 'dock' ? null : (dragState?.context ?? null)}
-            dragPreviewSlotIndex={
-              dragState?.context === 'outer'
-                ? (dragState.previewSlotIndex ?? null)
-                : (dragState?.previewSlotIndex ?? null)
-            }
-            dragFolderPreviewTargetId={dragState?.folderPreviewTargetId ?? null}
-            folderPreviewFreezeTargetId={folderPreviewFreezeTargetId}
-            folderCreateTransitionTargetId={folderCreateTransitionTargetId}
-            hiddenOuterItemIds={mergedHiddenOuterItemIds}
-            highlightedOuterItemIds={importHighlightIds}
-            previewFootprint={previewFootprint}
-            iconConfig={iconConfig}
-            selectionMode={selectionMode}
-            selectedSet={selectedSet}
-            openFolderId={visibleOpenFolderId}
-            activeFolderSharedLayoutId={visibleActiveFolderSharedLayoutId}
-            onToggleSelectIcon={toggleSelectIcon}
-            onTilePointerDown={handleTilePointerDown}
-            onTileClickCapture={handleTileClickCapture}
-            onOpenFolder={openFolderWithAnimation}
-            onLaunchIcon={path => {
-              void launchApp(path)
-            }}
-            onResizeFolder={handleResizeFolder}
-            onDissolveFolder={handleDissolveFolder}
-            bindTileRef={(id, node) => {
-              if (node) tileRefs.current.set(id, node)
-              else tileRefs.current.delete(id)
-            }}
-            reorderAnimationMs={REORDER_ANIMATION_MS}
-          />
+          {contentOverride ? (
+            <div className="flex h-full min-h-0 w-full pt-4">{contentOverride}</div>
+          ) : (
+            <OuterGridView
+              gridRef={gridRef}
+              gridWidth={gridWidth}
+              gridHeight={gridHeight}
+              columns={columns}
+              rows={rows}
+              itemWidth={itemWidth}
+              itemHeight={itemHeight}
+              gridGap={GRID_GAP}
+              pageCellCount={pageSize}
+              currentPage={currentPage}
+              pageAnchorEntries={pageAnchorEntries}
+              dragContext={dragState?.context === 'dock' ? null : (dragState?.context ?? null)}
+              dragPreviewSlotIndex={
+                dragState?.context === 'outer'
+                  ? (dragState.previewSlotIndex ?? null)
+                  : (dragState?.previewSlotIndex ?? null)
+              }
+              dragFolderPreviewTargetId={dragState?.folderPreviewTargetId ?? null}
+              folderPreviewFreezeTargetId={folderPreviewFreezeTargetId}
+              folderCreateTransitionTargetId={folderCreateTransitionTargetId}
+              hiddenOuterItemIds={mergedHiddenOuterItemIds}
+              highlightedOuterItemIds={importHighlightIds}
+              previewFootprint={previewFootprint}
+              iconConfig={iconConfig}
+              selectionMode={selectionMode}
+              selectedSet={selectedSet}
+              openFolderId={visibleOpenFolderId}
+              activeFolderSharedLayoutId={visibleActiveFolderSharedLayoutId}
+              onToggleSelectIcon={toggleSelectIcon}
+              onTilePointerDown={handleTilePointerDown}
+              onTileClickCapture={handleTileClickCapture}
+              onOpenFolder={openFolderWithAnimation}
+              onLaunchIcon={path => {
+                void launchApp(path)
+              }}
+              onResizeFolder={handleResizeFolder}
+              onDissolveFolder={handleDissolveFolder}
+              bindTileRef={(id, node) => {
+                if (node) tileRefs.current.set(id, node)
+                else tileRefs.current.delete(id)
+              }}
+              reorderAnimationMs={REORDER_ANIMATION_MS}
+            />
+          )}
         </div>
 
         {/* 左右翻页按钮：垂直居中于容器（翻的是整个网格，不应跟随网格内容高度），
             水平贴网格内容左右缘外 sideArrowOffset 处（网格居中，位置用 calc 推导）。 */}
-        {canGoLeft ? (
+        {!contentOverride && canGoLeft ? (
           <button
             type="button"
             aria-label="Previous page"
@@ -878,7 +894,7 @@ export function IconGrid({
             <ChevronLeft className="h-5 w-5" />
           </button>
         ) : null}
-        {canGoRight ? (
+        {!contentOverride && canGoRight ? (
           <button
             type="button"
             aria-label="Next page"
@@ -897,46 +913,24 @@ export function IconGrid({
         {/* 分页指示器：固定挂在容器底部内边距区（bottom = pb 值），位置恒定、
             紧贴 dock 上方，不随网格内容高度（行数/图标尺寸）浮动。
             paginationBottom 非 0 时以它为准：布局抽屉展开时指示器要抬到抽屉上方。 */}
-        <div
-          data-pagination
-          className="absolute left-1/2 z-[55] -translate-x-1/2 px-3 py-1.5"
-          style={{
-            bottom: `${paginationBottom > 0 ? paginationBottom : dockEnabled ? 128 : 48}px`,
-          }}
-          onMouseLeave={() => setHoverPage(null)}
-        >
-          <div className="flex items-center" style={{ columnGap: `${PAGINATION_DOT_GAP}px` }}>
-            {Array.from({ length: pageCount }, (_, index) => {
-              const isCurrent = currentPage === index
-              const isHovered = hoverPage === index
-              const shouldExpand = isCurrent || isHovered
-              return (
-                <button
-                  key={index}
-                  data-pagination
-                  type="button"
-                  aria-label={`Switch to page ${index + 1}`}
-                  onMouseEnter={() => setHoverPage(index)}
-                  onClick={() => {
-                    currentPageRef.current = index
-                    setCurrentPage(index)
-                  }}
-                  className={`relative rounded-full transition-all duration-250 ease-out ${
-                    isCurrent
-                      ? 'bg-foreground/88 shadow-[0_0_10px_rgba(15,23,42,0.25)] dark:bg-white/95 dark:shadow-[0_0_10px_rgba(255,255,255,0.75)]'
-                      : isHovered
-                        ? 'bg-foreground/45 dark:bg-white/55'
-                        : 'bg-foreground/25 hover:bg-foreground/35 dark:bg-white/35 dark:hover:bg-white/45'
-                  }`}
-                  style={{
-                    width: `${shouldExpand ? PAGINATION_ACTIVE_WIDTH : PAGINATION_DOT_SIZE}px`,
-                    height: `${PAGINATION_DOT_SIZE}px`,
-                  }}
-                />
-              )
-            })}
+        {!contentOverride ? (
+          <div
+            data-pagination
+            className="absolute left-1/2 z-[55] -translate-x-1/2 px-3 py-1.5"
+            style={{
+              bottom: `${paginationBottom > 0 ? paginationBottom : dockEnabled ? 128 : 48}px`,
+            }}
+          >
+            <GridPageDots
+              count={pageCount}
+              current={currentPage}
+              onChange={page => {
+                currentPageRef.current = page
+                setCurrentPage(page)
+              }}
+            />
           </div>
-        </div>
+        ) : null}
 
         {dockEnabled ? (
           <DockBar
@@ -999,7 +993,7 @@ export function IconGrid({
           />
         ) : null}
 
-        <FolderModalView
+        <GridFolderModal
           openFolder={openFolder}
           activeFolderSharedLayoutId={visibleActiveFolderSharedLayoutId}
           dragContext={dragState?.context === 'dock' ? null : (dragState?.context ?? null)}
@@ -1015,38 +1009,9 @@ export function IconGrid({
           folderItemHeight={folderItemHeight}
           folderRenderOrder={folderRenderOrder}
           folderItemById={folderItemById}
-          bindFolderTileRef={(id, node) => {
-            if (node) folderTileRefs.current.set(id, node)
-            else folderTileRefs.current.delete(id)
-          }}
-          onBackdropClose={event => {
-            event.stopPropagation()
-            if (event.target !== event.currentTarget) return
-            if (dragState?.context === 'folder') return
-            closeFolderWithAnimation()
-          }}
-          onPanelPointerDown={event => {
-            event.stopPropagation()
-          }}
-          onPanelClick={event => {
-            event.stopPropagation()
-            if (selectionMode) {
-              clearSelection()
-            }
-          }}
+          folderTileRefs={folderTileRefs}
+          closeFolderImmediately={closeFolderImmediately}
           onClose={closeFolderWithAnimation}
-          onRenameFolder={(folderId, name) => {
-            const nextItems = itemsRef.current.map(item =>
-              item.kind === 'folder' && item.id === folderId ? { ...item, name } : item
-            )
-            itemsRef.current = nextItems
-            setItems(nextItems)
-          }}
-          onActivateIcon={icon => {
-            void launchApp(icon.icon.path).finally(() => {
-              closeFolderImmediately()
-            })
-          }}
           onFolderTilePointerDown={handleFolderTilePointerDown}
           onTileClickCapture={handleTileClickCapture}
           maxModalWidth={FOLDER_MODAL_MAX_WIDTH}
@@ -1069,6 +1034,6 @@ export function IconGrid({
           folderPreviewEasing={FOLDER_PREVIEW_EASING}
         />
       </div>
-    </LayoutGroup>
+    </DirectoryLinksHost>
   )
 }

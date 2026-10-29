@@ -1,4 +1,4 @@
-import { LayoutGroup } from 'framer-motion'
+import type { ReactNode } from 'react'
 import {
   useCallback,
   useEffect,
@@ -46,7 +46,8 @@ import { DragOverlays } from './icon-grid/views/DragOverlays'
 import { OuterGridView } from './icon-grid/views/OuterGridView'
 import { ScrollableOuterGridView } from './icon-grid/views/ScrollableOuterGridView'
 import { EdgeGlow } from './icon-grid/views/EdgeGlow'
-import { FolderModalView } from './icon-grid/views/FolderModalView'
+import { GridFolderModal } from './directory-links/GridFolderModal'
+import { DirectoryLinksHost } from './directory-links/DirectoryLinksHost'
 import { DockBar } from './icon-grid/views/DockBar'
 import { getFolderChildSelectionsByIds } from './icon-grid/domain/folderPolicy'
 import { buildGridGeometryKey as buildGeometryKey } from './icon-grid/domain/gridGeometry'
@@ -72,6 +73,7 @@ import {
 } from './icon-grid/constants'
 
 interface IconGridProps {
+  emptyContent?: ReactNode
   icons: DesktopIcon[]
   layoutResetToken: number
   sidebarCompact?: boolean
@@ -85,6 +87,7 @@ const EVASION_COOLDOWN_MS = 120
 
 export function ScrollableIconGrid({
   icons,
+  emptyContent,
   layoutResetToken,
   sidebarCompact = false,
   onToggleSidebarCompact = () => {},
@@ -101,7 +104,6 @@ export function ScrollableIconGrid({
     selectedIconKeys,
     toggleSelectIcon,
     unselectIcons,
-    clearSelection,
     launchApp,
   } = useIconStore()
   const dockContainerRef = useRef<HTMLDivElement>(null)
@@ -723,7 +725,18 @@ export function ScrollableIconGrid({
   useEffect(() => () => clearEdgeSwitchTimer(), [clearEdgeSwitchTimer])
 
   return (
-    <LayoutGroup id="folder-shell-layout">
+    <DirectoryLinksHost
+      itemsRef={itemsRef}
+      setItems={setItems}
+      outerSlotsRef={outerSlotsRef}
+      setOuterSlots={setOuterSlots}
+      dockKeysRef={dockKeysRef}
+      setDockKeys={setDockKeys}
+      groupsRef={scrollGroupsRef}
+      setGroups={setScrollGroups}
+      currentGroupId={scrollGroups[currentPage]?.id}
+      onSelectGroup={setCurrentPage}
+    >
       <div
         data-single-item-dragging={isSingleDragActive ? 'true' : 'false'}
         className={
@@ -733,6 +746,11 @@ export function ScrollableIconGrid({
         }
         onWheel={launchpadGridViewMode === 'paged' ? handleWheelPageSwitch : undefined}
       >
+        {items.length === 0 && !scrollGroups.some(group => group.directory) ? (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+            <div className="pointer-events-auto">{emptyContent}</div>
+          </div>
+        ) : null}
         {launchpadGridViewMode === 'scroll' ? (
           <ScrollableOuterGridView
             containerRef={containerRef}
@@ -922,7 +940,7 @@ export function ScrollableIconGrid({
           />
         ) : null}
 
-        <FolderModalView
+        <GridFolderModal
           openFolder={openFolder}
           activeFolderSharedLayoutId={visibleActiveFolderSharedLayoutId}
           dragContext={dragState?.context === 'dock' ? null : (dragState?.context ?? null)}
@@ -938,38 +956,9 @@ export function ScrollableIconGrid({
           folderItemHeight={folderItemHeight}
           folderRenderOrder={folderRenderOrder}
           folderItemById={folderItemById}
-          bindFolderTileRef={(id, node) => {
-            if (node) folderTileRefs.current.set(id, node)
-            else folderTileRefs.current.delete(id)
-          }}
-          onBackdropClose={event => {
-            event.stopPropagation()
-            if (event.target !== event.currentTarget) return
-            if (dragState?.context === 'folder') return
-            closeFolderWithAnimation()
-          }}
-          onPanelPointerDown={event => {
-            event.stopPropagation()
-          }}
-          onPanelClick={event => {
-            event.stopPropagation()
-            if (selectionMode) {
-              clearSelection()
-            }
-          }}
+          folderTileRefs={folderTileRefs}
+          closeFolderImmediately={closeFolderImmediately}
           onClose={closeFolderWithAnimation}
-          onRenameFolder={(folderId, name) => {
-            const nextItems = itemsRef.current.map(item =>
-              item.kind === 'folder' && item.id === folderId ? { ...item, name } : item
-            )
-            itemsRef.current = nextItems
-            setItems(nextItems)
-          }}
-          onActivateIcon={icon => {
-            void launchApp(icon.icon.path).finally(() => {
-              closeFolderImmediately()
-            })
-          }}
           onFolderTilePointerDown={handleFolderTilePointerDown}
           onTileClickCapture={handleTileClickCapture}
           maxModalWidth={FOLDER_MODAL_MAX_WIDTH}
@@ -993,6 +982,6 @@ export function ScrollableIconGrid({
           folderPreviewEasing={FOLDER_PREVIEW_EASING}
         />
       </div>
-    </LayoutGroup>
+    </DirectoryLinksHost>
   )
 }

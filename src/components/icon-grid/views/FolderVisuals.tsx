@@ -1,4 +1,4 @@
-import { AppWindow } from 'lucide-react'
+import { AppWindow, FolderOpen } from 'lucide-react'
 import { memo } from 'react'
 import type { DesktopIcon } from '../../../types'
 import { useIconStore } from '../../../stores/iconStore'
@@ -161,6 +161,11 @@ export function FolderIconVisual({
         className={`${withSurface ? FOLDER_SURFACE_CLASS : ''} absolute transition-[left,top,width,height] duration-200 ease-out`}
         style={surfaceStyle}
       >
+        {icons.length === 0 ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <FolderOpen className="h-2/3 w-2/3 text-foreground/70" />
+          </div>
+        ) : null}
         {icons.slice(0, 4).map((icon, idx) => {
           const row = Math.floor(idx / 2)
           const col = idx % 2

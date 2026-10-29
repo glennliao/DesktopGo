@@ -1,3 +1,4 @@
+import { DirectoryLinkMenuItems } from '../../directory-links/DirectoryLinksHost'
 import {
   AppWindow,
   Bell,
@@ -548,7 +549,9 @@ export function ScrollableGroupNavigation({
                                     data-scroll-group-count
                                     className="scroll-grid-group-count mt-0.5 block text-[11px] leading-3.5 text-muted-foreground"
                                   >
-                                    {translate('{count} 项', { count: section.itemCount })}
+                                    {section.meta?.directory
+                                      ? translate('关联目录')
+                                      : translate('{count} 项', { count: section.itemCount })}
                                   </span>
                                 </span>
                                 <GripVertical
@@ -562,6 +565,13 @@ export function ScrollableGroupNavigation({
                             <ContextMenuItem onSelect={() => openGroupEditor(section)}>
                               {translate('编辑分组')}
                             </ContextMenuItem>
+                            {section.meta ? (
+                              <DirectoryLinkMenuItems
+                                kind="group"
+                                id={section.meta.id}
+                                directory={section.meta.directory}
+                              />
+                            ) : null}
                             <ContextMenuItem
                               disabled={sections.length <= 1}
                               className="text-red-700 focus:bg-red-500/12 focus:text-red-800 dark:text-red-200 dark:focus:bg-red-500/20 dark:focus:text-red-100"

@@ -128,8 +128,6 @@ export function usePagedIconGridLayout({
     const hydrationEnvironment = readLayoutHydrationEnvironment()
 
     const hydrate = async () => {
-      if (!hydratedRef.current && icons.length === 0) return
-
       let persisted: PersistedLayout | null = null
       const hydrationSource = resolveLayoutHydrationSource({
         hydrated: hydratedRef.current,
