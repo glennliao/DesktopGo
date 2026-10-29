@@ -107,32 +107,40 @@ export function DirectoryContentsView({
             <ArrowLeft className="h-4 w-4" />
           </Button>
         ) : null}
-        <div
-          className="flex min-w-0 flex-1 items-center overflow-x-auto"
-          title={link.rootPath + (relativePath ? '/' + relativePath : '')}
+        {relativePath !== base ? (
+          <div
+            className="flex min-w-0 flex-1 items-center overflow-x-auto"
+            title={link.rootPath + (relativePath ? '/' + relativePath : '')}
+          >
+            {ancestors.map(path =>
+              path === relativePath ? (
+                <span
+                  key={path}
+                  className="shrink-0 px-1.5 py-1 text-foreground"
+                  aria-current="location"
+                >
+                  {path === base ? name : '/ ' + directoryDisplayName(path)}
+                </span>
+              ) : (
+                <button
+                  key={path}
+                  type="button"
+                  className="shrink-0 rounded px-1.5 py-1 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => navigate(path)}
+                >
+                  {path === base ? name : '/ ' + directoryDisplayName(path)}
+                </button>
+              )
+            )}
+          </div>
+        ) : null}
+        <Button
+          className="ml-auto"
+          size="sm"
+          variant="ghost"
+          aria-label={translate('刷新')}
+          onClick={refresh}
         >
-          {ancestors.map(path =>
-            path === relativePath ? (
-              <span
-                key={path}
-                className="shrink-0 px-1.5 py-1 text-foreground"
-                aria-current="location"
-              >
-                {path === base ? name : '/ ' + directoryDisplayName(path)}
-              </span>
-            ) : (
-              <button
-                key={path}
-                type="button"
-                className="shrink-0 rounded px-1.5 py-1 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                onClick={() => navigate(path)}
-              >
-                {path === base ? name : '/ ' + directoryDisplayName(path)}
-              </button>
-            )
-          )}
-        </div>
-        <Button size="sm" variant="ghost" aria-label={translate('刷新')} onClick={refresh}>
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
         </Button>
       </nav>
