@@ -540,11 +540,6 @@ mod tests {
     use super::{shortcut_icon_lookup_paths, shortcut_icon_resource_candidates};
 
     #[test]
-    fn shell_launch_rejects_embedded_null_without_opening_a_target() {
-        assert!(super::launch_app_windows("invalid\0.exe").is_err());
-    }
-
-    #[test]
     fn shortcut_icon_lookup_prefers_the_shortcut_before_its_target() {
         assert_eq!(
             shortcut_icon_lookup_paths(

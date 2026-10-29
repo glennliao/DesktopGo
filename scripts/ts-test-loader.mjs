@@ -1,14 +1,11 @@
 const I18N_STUB_URL =
-  'data:text/javascript,' + encodeURIComponent('export const translate = message => message;\n')
+  'data:text/javascript,' +
+  encodeURIComponent('export const translate = message => message;\n')
 
 const CANDIDATE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs']
 
 export async function resolve(specifier, context, defaultResolve) {
-  if (
-    specifier === '../../../lib/i18n' ||
-    specifier === '../../../lib/i18n.tsx' ||
-    specifier === '@/lib/i18n'
-  ) {
+  if (specifier === '../../../lib/i18n' || specifier === '../../../lib/i18n.tsx') {
     return { url: I18N_STUB_URL, shortCircuit: true }
   }
 

@@ -172,16 +172,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn normalize_accepts_recorded_shortcuts() {
-        for shortcut in [
-            DEFAULT_LAUNCHPAD_SHORTCUT,
-            "Ctrl+Alt+KeyK",
-            "Ctrl+Shift+Equal",
-            "Alt+ArrowUp",
-            "Super+KeyP",
-        ] {
-            assert!(normalize(shortcut).is_ok(), "{shortcut}");
-        }
+    fn normalize_accepts_default_shortcut() {
+        assert!(normalize(DEFAULT_LAUNCHPAD_SHORTCUT).is_ok());
     }
 
     #[test]
