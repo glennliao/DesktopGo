@@ -1,6 +1,12 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { directoryFolderSize, parseDirectoryLink, resizeDirectoryFolder } from './domain.ts'
+import {
+  directoryAncestors,
+  normalizeDirectoryPath,
+  directoryFolderSize,
+  parseDirectoryLink,
+  resizeDirectoryFolder,
+} from './domain.ts'
 import {
   hydrateLayout,
   serializeItems,
@@ -16,6 +22,18 @@ import { applyAiGroupsPreservingDirectories } from './aiLayoutPolicy.ts'
 import { prependDirectoryList, resizeDirectoryList } from './listLayoutPolicy.ts'
 import { directoryEntryGridItem, directoryGridLayout, directoryGridWindow } from './gridWindow.ts'
 import { linkedFolderPreview } from './folderPreview.ts'
+
+test('dialog breadcrumbs stay within the opened folder and normalize Windows separators', () => {
+  assert.equal(normalizeDirectoryPath('工具\\开发/项目'), '工具/开发/项目')
+  assert.deepEqual(directoryAncestors('工具\\开发\\项目', '工具'), [
+    '工具',
+    '工具/开发',
+    '工具/开发/项目',
+  ])
+  assert.deepEqual(directoryAncestors('工具', '工具'), ['工具'])
+  assert.deepEqual(directoryAncestors('工具\\开发'), ['', '工具', '工具/开发'])
+  assert.deepEqual(directoryAncestors('工具箱/项目', '工具'), [])
+})
 
 test('directory pages cover every entry and clamp the last page after resizing or refresh', () => {
   const input = {

@@ -186,6 +186,7 @@ export function FolderModalView({
               key={JSON.stringify([openFolder.id, openFolder.directory.rootPath, sequence])}
               link={openFolder.directory}
               name={openFolder.name}
+              navigation="inline"
               onFolderResize={
                 directoryActions
                   ? (path, size) =>

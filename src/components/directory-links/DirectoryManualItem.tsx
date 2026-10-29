@@ -95,6 +95,7 @@ export function DirectoryManualItem({ item, span }: { item: GridItem; span: Grid
                     key={requested?.sequence ?? 0}
                     link={item.directory}
                     name={item.name}
+                    navigation="inline"
                     initialPath={requested?.folderId === item.id ? requested.path : ''}
                     manualItems={item.children}
                   />

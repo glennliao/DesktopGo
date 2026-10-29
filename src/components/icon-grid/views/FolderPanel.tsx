@@ -26,6 +26,7 @@ interface FolderPanelProps {
   width: number
   maxModalHeight: number
   onClose: () => void
+  onExitComplete?: () => void
   onRename?: (name: string) => void
   onBackdropClose: (event: ReactPointerEvent<HTMLDivElement>) => void
   onPanelPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void
@@ -40,6 +41,7 @@ export function FolderPanel({
   width,
   maxModalHeight,
   onClose,
+  onExitComplete,
   onRename,
   onBackdropClose,
   onPanelPointerDown,
@@ -56,7 +58,7 @@ export function FolderPanel({
     ? { duration: 0 }
     : { duration: 0.24, ease: FOLDER_MODAL_TRANSITION_EASING, delay: 0.06 }
   const sharedLayoutId =
-    openFolder && activeFolderSharedLayoutId === openFolder.id
+    !prefersReducedMotion && openFolder && activeFolderSharedLayoutId === openFolder.id
       ? getFolderSharedLayoutId(openFolder.id)
       : undefined
 
@@ -148,14 +150,17 @@ export function FolderPanel({
     <AnimatePresence
       initial={false}
       onExitComplete={() => {
-        if (!openFolderIdRef.current) restorePreviousFocus()
+        if (!openFolderIdRef.current) {
+          restorePreviousFocus()
+          onExitComplete?.()
+        }
       }}
     >
       {openFolder ? (
         <motion.div
           key={openFolder.id}
           data-folder-modal="true"
-          className="launchpad-overlay-backdrop absolute inset-0 z-40 flex items-center justify-center backdrop-blur-[2px]"
+          className="launchpad-overlay-backdrop pointer-events-auto absolute inset-0 z-40 flex items-center justify-center backdrop-blur-[2px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

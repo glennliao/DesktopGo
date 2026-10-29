@@ -23,6 +23,8 @@ export function DirectoryEntryTile({
   onLaunch,
   onResize,
   preferredSize,
+  folderOpen = false,
+  sharedLayoutActive = false,
 }: {
   entry: DirectoryEntry
   item: GridItem
@@ -34,6 +36,8 @@ export function DirectoryEntryTile({
   onLaunch: (path: string) => void
   onResize?: (size: FolderSize) => void
   preferredSize?: FolderSize
+  folderOpen?: boolean
+  sharedLayoutActive?: boolean
 }) {
   const reveal = () =>
     void invoke('launch_app', {
@@ -48,8 +52,8 @@ export function DirectoryEntryTile({
         slotHeight={tileHeight}
         gridGap={8}
         folderPreview={false}
-        folderOpen={false}
-        sharedLayoutActive={false}
+        folderOpen={folderOpen}
+        sharedLayoutActive={sharedLayoutActive}
         selectionMode={false}
         readOnly
         preferredSize={preferredSize}

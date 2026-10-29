@@ -31,10 +31,12 @@ export function DirectoryGrid({
   scrollHost,
   manualItems = [],
   onFolderResize,
+  openFolderId,
+  activeFolderSharedLayoutId,
 }: {
   entries: DirectoryEntry[]
   link: DirectoryLink
-  onEnter: (path: string) => void
+  onEnter: (path: string, entry: DirectoryEntry) => void
   initialPosition?: ViewPosition
   focusOnMount: boolean
   onRemember: (position: ViewPosition) => void
@@ -42,6 +44,8 @@ export function DirectoryGrid({
   scrollHost?: RefObject<HTMLDivElement | null>
   manualItems?: GridItem[]
   onFolderResize?: (path: string, size: FolderSize) => void
+  openFolderId?: string | null
+  activeFolderSharedLayoutId?: string | null
 }) {
   const { iconSize, launchApp } = useIconStore()
   const config = ICON_SIZE_CONFIG[iconSize]
@@ -137,7 +141,7 @@ export function DirectoryGrid({
       page: currentPage,
       focusedEntryId: directoryEntryId(link.rootPath, entry),
     })
-    onEnter(path)
+    onEnter(path, entry)
   }
   const grid = (
     <div
@@ -189,6 +193,10 @@ export function DirectoryGrid({
                       : undefined
                   }
                   span={placed.span}
+                  folderOpen={placed.item.kind === 'folder' && placed.item.id === openFolderId}
+                  sharedLayoutActive={
+                    placed.item.kind === 'folder' && placed.item.id === activeFolderSharedLayoutId
+                  }
                   tileWidth={config.containerWidth}
                   tileHeight={rowHeight - 8}
                   icon={

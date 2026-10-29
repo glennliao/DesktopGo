@@ -8,7 +8,9 @@ export interface DirectoryLink {
 
 const isFolderSize = (value: unknown): value is FolderSize =>
   ['1x1', '1x2', '2x1', '2x2'].includes(value as string)
-const directorySizeKey = (path: string) => path.replace(/\\/g, '/')
+export const normalizeDirectoryPath = (path: string) =>
+  path.split(/[\\/]/).filter(Boolean).join('/')
+const directorySizeKey = normalizeDirectoryPath
 export const directoryFolderSize = (link: DirectoryLink, path: string): FolderSize => {
   const size = link.folderSizes?.[directorySizeKey(path)]
   return isFolderSize(size) ? size : '2x2'
@@ -59,9 +61,11 @@ export const parseDirectoryLink = (value: unknown): DirectoryLink | undefined =>
     : undefined
 }
 
-export const directoryAncestors = (relativePath: string): string[] => {
+export const directoryAncestors = (relativePath: string, basePath = ''): string[] => {
   const parts = relativePath.split(/[\\/]/).filter(Boolean)
-  return ['', ...parts.map((_, index) => parts.slice(0, index + 1).join('/'))]
+  const ancestors = ['', ...parts.map((_, index) => parts.slice(0, index + 1).join('/'))]
+  const base = normalizeDirectoryPath(basePath)
+  return base ? ancestors.filter(path => path === base || path.startsWith(base + '/')) : ancestors
 }
 
 export const directoryDisplayName = (path: string) =>
