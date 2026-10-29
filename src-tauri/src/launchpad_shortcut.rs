@@ -1,4 +1,4 @@
-use crate::{request_main_window_show, storage_profile};
+use crate::{storage_profile, window::toggle_main_window_visibility};
 use std::sync::Mutex;
 use tauri::Manager;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
@@ -44,7 +44,7 @@ fn register_handler(app: &tauri::AppHandle, shortcut: &str) -> Result<String, St
             if event.state != ShortcutState::Released {
                 return;
             }
-            request_main_window_show(&handle);
+            toggle_main_window_visibility(&handle);
         })
         .map_err(|error| format!("无法注册启动台快捷键 `{}`：{}", normalized, error))?;
 
