@@ -1,0 +1,12 @@
+{
+  "productName": "DesktopGo Linked",
+  "mainBinaryName": "desktopgo-linked",
+  "identifier": "local.desktopgo.linked",
+  "plugins": {
+    "updater": { "pubkey": "", "endpoints": [] }
+  },
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "publisher": "DesktopGo Linked"
+  }
+}
