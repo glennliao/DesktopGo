@@ -1,26 +1,26 @@
 # DesktopGo fork、目录关联与上游同步调研
 
-调研及方案更新日期：2026-10-30。状态：关联列表、关联文件夹、子目录封面与动画弹窗、快捷键双向切换及直接录入、测试版名称统一已在本地 `fork/main` 分支实现，自动检查已通过。用户截图已呈现关联列表与目录封面，用户已确认快捷键可唤起；最新版完整窗口交互、重启恢复及安装升级仍待人工验收。未创建 GitHub fork，未推送或发布；本地提交以 Git 记录为准。
+调研及方案更新日期：2026-10-30。状态：关联列表、关联文件夹、子目录封面与动画弹窗、快捷键双向切换及直接录入、测试版名称统一已在 `fork/main` 分支实现，自动检查已通过。用户截图已呈现关联列表与目录封面，用户已确认快捷键可唤起；最新版完整窗口交互、重启恢复及安装升级仍待人工验收。自有 GitHub fork 已建立，定制代码已推送；尚未发布 Release，提交以 Git 记录为准。
 
 ## 当前交付与继续开发入口
 
-- 工作目录：`E:\desktop-go`；定制主线：`fork/main`。上游基线为 `b95939ae70ee6332a5f3181b4bd7c008fbfa54e4`，目前唯一远端 `origin` 仍指向 `https://github.com/Aixbox/DesktopGo.git`。本地提交尚未推送，仓库地址待用户提供。
+- 工作目录：`E:\desktop-go`；定制主线：`fork/main`，跟踪 `origin/fork/main`。`origin` 为 `https://github.com/glennliao/DesktopGo.git`，`upstream` 为 `https://github.com/Aixbox/DesktopGo.git`。代码已备份到自有 fork；GitHub 默认分支仍为 `desktop`，定制入口为 [fork/main](https://github.com/glennliao/DesktopGo/tree/fork/main)。
 - 最新功能包基于 `5c9ed7a`；后续 `0e38fc7` 仅移除自加测试、恢复上游测试配置并修订文档，未改变产品实现。当前代码状态查看 `git status`、`git log`，不依赖聊天记录。
 - 安装包：`src-tauri/target/release/bundle/nsis/DesktopGo Linked_1.0.9_x64-setup.exe`，Windows x64、未签名，大小 `23,207,956` 字节。SHA-256：`96F093A07D7B9C84675DDDDCC807C43131DE5A3E4AA2A683B3F46A9C25689BF8`。安装包是本地产物，不随 Git 提交；重建用 `pnpm build:installer:linked`。
 - 当前验证：沿用上游 148 项前端、207 项 Rust 测试，均已通过；构建、Rust 检查与严格 Clippy 已通过。ESLint 只有原有 `IconGrid.tsx` 行数警告。按用户要求，不新增或扩展测试；新增行为使用临时验收。
 - 进程与输入由用户控制：不自行启动／停止项目、打开浏览器或操作用户键鼠。归档后继续开发，先阅读本文当前方案及中英文使用指南；实际窗口与安装验收由用户提供结果。
-- 待办（2026-10-30）：提供自己的 Git 仓库后，保留上游为 `upstream`、自己的仓库为 `origin`，推送 `fork/main`；正式签名、发布仓库与更新通道单独确定。尚未发布线上版本，不运行上游发行脚本。
+- 待办（2026-10-30）：初始开发基线为 `b95939ae70ee6332a5f3181b4bd7c008fbfa54e4`；上游 `desktop` 已前进到 `962f12b08a1d1832c0457d025e1cfba02c48880e`，新增 7 个提交，涉及布局及文件夹行为，尚未合入定制主线。后续另建同步分支评估并合并；正式签名、发布及更新通道单独确定。本轮只推送 `fork/main`，未合并或改写 `desktop`，未运行发行脚本。
 
 ## 结论
 
-1. 建议从上游默认分支 `desktop` 开始。当前提交为 `b95939ae70ee6332a5f3181b4bd7c008fbfa54e4`。
+1. 从上游默认分支 `desktop` 开始，初始开发基线为 `b95939ae70ee6332a5f3181b4bd7c008fbfa54e4`；后续上游提交按独立同步流程处理。
 2. `dev/sidebar` 已完整包含在 `desktop` 中，无需合并旧分支。
 3. 用户需要的是目录内容持续映射到界面，省去逐项导入和整理；现有导入及搜索目录配置均不能直接满足。
 4. 两个关联位置均实现：一级关联列表，以及列表内的关联文件夹。列表子目录以封面显示，并展开动画弹窗；关联文件夹及弹窗内的磁盘子目录在同一弹层逐层浏览，提供返回和面包屑。
 5. 复用现有列表、文件夹弹层外壳、图标、滚动区、目录选择和启动能力；磁盘目录按层读取，动态内容不进入手工拖拽布局或托管图标库。
 6. fork 的独立发行身份和更新通道应与通用目录功能分开维护。
 
-## 已核实的上游事实
+## 已核实的上游事实（初始基线）
 
 ### sidebar 分支
 
@@ -239,7 +239,7 @@ Rust 增加一个小型目录读取模块，以及一个命令 `read_directory`�
 
 ### 分支及提交组织
 
-- fork 后 `origin` 指自己的仓库，`upstream` 指 `https://github.com/Aixbox/DesktopGo.git`。
+- `origin` 已指向 `https://github.com/glennliao/DesktopGo.git`，`upstream` 指向 `https://github.com/Aixbox/DesktopGo.git`。
 - 保留 `desktop` 为纯上游镜像；定制主线建议 `fork/main`，可将其设为 fork 默认分支。
 - 通用目录功能、fork 身份与发行配置分开提交。功能补丁按可验证行为拆分，不把代码格式化或无关重构混入。
 - 同步时从定制主线新建临时同步分支，merge `upstream/desktop`，解决冲突并验证后合入。已共享／已发布主线不反复 rebase。
@@ -250,7 +250,7 @@ Rust 增加一个小型目录读取模块，以及一个命令 `read_directory`�
 
 每次同步重点核对四条链路：容器字段是否仍能往返保存，空／单成员关联文件夹是否被收拢，动态目录项是否进入了手工图标动作，AI／布局恢复是否重建时丢失关联。对没有关联字段的上游旧布局沿用现有验证并进行临时验收；如上游调整全局布局版本，沿用它的新版本并迁移关联字段，不长期冻结在 v9。
 
-下列命令是后续 fork 配置完成后的操作示例，**此次未执行**：
+下列命令是后续同步上游的操作示例，**本轮未执行合并或推送 `desktop`**：
 
 ```powershell
 # origin 已指向自己的 fork，upstream 已配置
@@ -316,9 +316,9 @@ fork 身份和更新通道作为单独变更处理；实际创建 fork、选定�
 - 已确认：两个关联位置均支持，子目录在软件内逐层展开；复用现有容器和文件夹样式，优先减少上游代码分叉。
 - 当前方案：容器上保存可选关联字段，动态内容独立于手工布局；一次读取当前层；刷新时机为显示／进入／手动刷新。
 - 明确排除：递归手工布局模型、批量中转导入、常驻轮询、整树扫描、磁盘写操作及自动拆根目录为多个列表。
-- 功能方案暂无需要阻塞实施的未决问题。独立测试包已确定名称 `DesktopGo Linked`、标识 `local.desktopgo.linked`、主程序 `desktopgo-linked.exe`，关闭上游更新；正式 fork 仓库、发行签名和更新通道仍在发布前另行确定。
+- 功能方案暂无需要阻塞实施的未决问题。独立测试包已确定名称 `DesktopGo Linked`、标识 `local.desktopgo.linked`、主程序 `desktopgo-linked.exe`，关闭上游更新；自有 fork 已配置，发行签名和更新通道仍在发布前另行确定。
 
-本地代码位于 `E:\desktop-go` 的 `fork/main` 分支；当前 origin 仍指上游。应用代码和中英文使用指南均已更新，提交以 Git 记录为准；未推送。
+本地代码位于 `E:\desktop-go` 的 `fork/main` 分支，已推送到 `glennliao/DesktopGo` 的同名分支。应用代码和中英文使用指南均已更新，提交以 Git 记录为准；尚未发布 Release。
 
 ## 实施状态（2026-10-30）
 
