@@ -8,6 +8,10 @@
 
 <h1 align="center">DesktopGo</h1>
 
+> This branch is **DesktopGo Linked**, a separate test build with linked directory lists/folders, folder covers and animated folder panels. Upstream automatic updates are disabled. The Releases links below refer to the original upstream application and do not include these changes.
+>
+> See the [fork decisions and handoff](docs/FORK_DIRECTORY_RESEARCH.zh-CN.md) and [user guide](docs/USER_GUIDE.en.md). Build the standalone installer with `pnpm build:installer:linked`.
+
 <p align="center">
   A Windows desktop launchpad that brings app launching, icon organization, AI-powered grouping, and Everything-powered file search into one focused entry point.
 </p>

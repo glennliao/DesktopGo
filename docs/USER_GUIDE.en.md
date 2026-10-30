@@ -4,6 +4,8 @@
 
 Supported platforms: Windows 10 / Windows 11
 
+The standalone test installer for this branch is named **DesktopGo Linked**. It uses a separate installation and data directory, with upstream automatic updates disabled. The download links below point to the original upstream version; see the [fork notes](./FORK_DIRECTORY_RESEARCH.zh-CN.md) for this branch's build and installer details.
+
 DesktopGo is a Windows desktop launchpad that brings a personal icon library, quick app entry points, and Everything-powered file search into one focused entry point.
 
 ## 📦 1. Install and Launch
@@ -40,7 +42,7 @@ Notes:
 
 ### ⌨️ Open and Close
 
-- Press `Ctrl+Space` to open the launchpad.
+- Press `Ctrl+Space` to show the launchpad, then press it again to hide it to the tray. A custom shortcut uses the same toggle behavior.
 - Press `Esc` to close the search panel, clear the current search, or close the launchpad when search is idle.
 - The launchpad hides automatically when it loses focus.
 - You can also reopen it from the system tray icon.
@@ -172,6 +174,8 @@ The settings window is mainly divided into the following areas:
 Shortcut notes:
 
 - The default shortcut is `Ctrl+Space`
+- Click the **Launchpad shortcut** field, press the desired key combination, then click **Save shortcut**. You do not need to type shortcut names. Press `Esc` to cancel recording; unsaved changes do not replace the current shortcut.
+- The shortcut toggles visibility when released. The window close button hides it to the tray; use the tray menu to quit the application.
 - Some IMEs or system shortcuts may intercept this combination
 - If it does not work reliably on your machine, change it in settings
 

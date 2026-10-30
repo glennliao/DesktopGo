@@ -2,6 +2,8 @@
 
 本文档说明如何发布 DesktopGo 的新版本。
 
+> 本分支当前交付的是 **DesktopGo Linked 本地测试包**，尚未建立自己的正式发布与更新通道。构建命令为 `pnpm build:installer:linked`，不需要创建 tag 或运行下方发布脚本。正式发布前先确定自己的仓库、签名和更新配置，详见 [定制版说明](./FORK_DIRECTORY_RESEARCH.zh-CN.md)。
+
 ## 准备工作
 
 ### 1. 更新版本号

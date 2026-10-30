@@ -8,6 +8,10 @@
 
 <h1 align="center">DesktopGo</h1>
 
+> 本分支为 **DesktopGo Linked** 独立测试版，新增列表／文件夹关联目录、子目录封面与弹窗浏览，关闭上游自动更新。下方 Releases 链接属于上游原版，不包含本分支定制。
+>
+> 当前方案、安装包信息、验证范围和后续同步步骤见 [定制版说明](docs/FORK_DIRECTORY_RESEARCH.zh-CN.md)；操作见 [使用指南](docs/USER_GUIDE.zh-CN.md)。本地安装包使用 `pnpm build:installer:linked` 构建。
+
 <p align="center">
   一个面向 Windows 的桌面启动台，把应用唤起、图标整理、AI 智能分组和 Everything 文件搜索收进同一个入口。
 </p>
